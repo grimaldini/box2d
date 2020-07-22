@@ -41,9 +41,9 @@ b2RopeJoint::b2RopeJoint(const b2RopeJointDef* def)
 
 	m_maxLength = def->maxLength;
 
-	m_mass = 0.0f;
-	m_impulse = 0.0f;
-	m_length = 0.0f;
+	m_mass = fixed_zero;
+	m_impulse = fixed_zero;
+	m_length = fixed_zero;
 }
 
 void b2RopeJoint::InitVelocityConstraints(const b2SolverData& data)
@@ -58,14 +58,14 @@ void b2RopeJoint::InitVelocityConstraints(const b2SolverData& data)
 	m_invIB = m_bodyB->m_invI;
 
 	b2Vec2 cA = data.positions[m_indexA].c;
-	float aA = data.positions[m_indexA].a;
+	fixed aA = data.positions[m_indexA].a;
 	b2Vec2 vA = data.velocities[m_indexA].v;
-	float wA = data.velocities[m_indexA].w;
+	fixed wA = data.velocities[m_indexA].w;
 
 	b2Vec2 cB = data.positions[m_indexB].c;
-	float aB = data.positions[m_indexB].a;
+	fixed aB = data.positions[m_indexB].a;
 	b2Vec2 vB = data.velocities[m_indexB].v;
-	float wB = data.velocities[m_indexB].w;
+	fixed wB = data.velocities[m_indexB].w;
 
 	b2Rot qA(aA), qB(aB);
 
@@ -75,26 +75,26 @@ void b2RopeJoint::InitVelocityConstraints(const b2SolverData& data)
 
 	m_length = m_u.Length();
 
-	float C = m_length - m_maxLength;
+	fixed C = m_length - m_maxLength;
 
 	if (m_length > b2_linearSlop)
 	{
-		m_u *= 1.0f / m_length;
+		m_u *= fixed_one / m_length;
 	}
 	else
 	{
 		m_u.SetZero();
-		m_mass = 0.0f;
-		m_impulse = 0.0f;
+		m_mass = fixed_zero;
+		m_impulse = fixed_zero;
 		return;
 	}
 
 	// Compute effective mass.
-	float crA = b2Cross(m_rA, m_u);
-	float crB = b2Cross(m_rB, m_u);
-	float invMass = m_invMassA + m_invIA * crA * crA + m_invMassB + m_invIB * crB * crB;
+	fixed crA = b2Cross(m_rA, m_u);
+	fixed crB = b2Cross(m_rB, m_u);
+	fixed invMass = m_invMassA + m_invIA * crA * crA + m_invMassB + m_invIB * crB * crB;
 
-	m_mass = invMass != 0.0f ? 1.0f / invMass : 0.0f;
+	m_mass = invMass != fixed_zero ? fixed_one / invMass : fixed_zero;
 
 	if (data.step.warmStarting)
 	{
@@ -109,7 +109,7 @@ void b2RopeJoint::InitVelocityConstraints(const b2SolverData& data)
 	}
 	else
 	{
-		m_impulse = 0.0f;
+		m_impulse = fixed_zero;
 	}
 
 	data.velocities[m_indexA].v = vA;
@@ -121,25 +121,25 @@ void b2RopeJoint::InitVelocityConstraints(const b2SolverData& data)
 void b2RopeJoint::SolveVelocityConstraints(const b2SolverData& data)
 {
 	b2Vec2 vA = data.velocities[m_indexA].v;
-	float wA = data.velocities[m_indexA].w;
+	fixed wA = data.velocities[m_indexA].w;
 	b2Vec2 vB = data.velocities[m_indexB].v;
-	float wB = data.velocities[m_indexB].w;
+	fixed wB = data.velocities[m_indexB].w;
 
 	// Cdot = dot(u, v + cross(w, r))
 	b2Vec2 vpA = vA + b2Cross(wA, m_rA);
 	b2Vec2 vpB = vB + b2Cross(wB, m_rB);
-	float C = m_length - m_maxLength;
-	float Cdot = b2Dot(m_u, vpB - vpA);
+	fixed C = m_length - m_maxLength;
+	fixed Cdot = b2Dot(m_u, vpB - vpA);
 
 	// Predictive constraint.
-	if (C < 0.0f)
+	if (C < fixed_zero)
 	{
 		Cdot += data.step.inv_dt * C;
 	}
 
-	float impulse = -m_mass * Cdot;
-	float oldImpulse = m_impulse;
-	m_impulse = b2Min(0.0f, m_impulse + impulse);
+	fixed impulse = -m_mass * Cdot;
+	fixed oldImpulse = m_impulse;
+	m_impulse = b2Min(fixed_zero, m_impulse + impulse);
 	impulse = m_impulse - oldImpulse;
 
 	b2Vec2 P = impulse * m_u;
@@ -157,9 +157,9 @@ void b2RopeJoint::SolveVelocityConstraints(const b2SolverData& data)
 bool b2RopeJoint::SolvePositionConstraints(const b2SolverData& data)
 {
 	b2Vec2 cA = data.positions[m_indexA].c;
-	float aA = data.positions[m_indexA].a;
+	fixed aA = data.positions[m_indexA].a;
 	b2Vec2 cB = data.positions[m_indexB].c;
-	float aB = data.positions[m_indexB].a;
+	fixed aB = data.positions[m_indexB].a;
 
 	b2Rot qA(aA), qB(aB);
 
@@ -168,11 +168,11 @@ bool b2RopeJoint::SolvePositionConstraints(const b2SolverData& data)
 	b2Vec2 u = cB + rB - cA - rA;
 
 	m_length = u.Normalize();
-	float C = m_length - m_maxLength;
+	fixed C = m_length - m_maxLength;
 
-	C = b2Clamp(C, 0.0f, b2_maxLinearCorrection);
+	C = b2Clamp(C, fixed_zero, b2_maxLinearCorrection);
 
-	float impulse = -m_mass * C;
+	fixed impulse = -m_mass * C;
 	b2Vec2 P = impulse * u;
 
 	cA -= m_invMassA * P;
@@ -198,24 +198,24 @@ b2Vec2 b2RopeJoint::GetAnchorB() const
 	return m_bodyB->GetWorldPoint(m_localAnchorB);
 }
 
-b2Vec2 b2RopeJoint::GetReactionForce(float inv_dt) const
+b2Vec2 b2RopeJoint::GetReactionForce(fixed inv_dt) const
 {
 	b2Vec2 F = (inv_dt * m_impulse) * m_u;
 	return F;
 }
 
-float b2RopeJoint::GetReactionTorque(float inv_dt) const
+fixed b2RopeJoint::GetReactionTorque(fixed inv_dt) const
 {
 	B2_NOT_USED(inv_dt);
-	return 0.0f;
+	return fixed_zero;
 }
 
-float b2RopeJoint::GetMaxLength() const
+fixed b2RopeJoint::GetMaxLength() const
 {
 	return m_maxLength;
 }
 
-float b2RopeJoint::GetLength() const
+fixed b2RopeJoint::GetLength() const
 {
 	return m_length;
 }

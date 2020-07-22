@@ -223,7 +223,7 @@ void b2Joint::Draw(b2Draw* draw) const
 	b2Vec2 p1 = GetAnchorA();
 	b2Vec2 p2 = GetAnchorB();
 
-	b2Color color(0.5f, 0.8f, 0.8f);
+	b2Color color(fixed_half, fixed(8, 10), fixed(8, 10));
 
 	switch (m_type)
 	{
@@ -245,11 +245,11 @@ void b2Joint::Draw(b2Draw* draw) const
 	case e_mouseJoint:
 	{
 		b2Color c;
-		c.Set(0.0f, 1.0f, 0.0f);
-		draw->DrawPoint(p1, 4.0f, c);
-		draw->DrawPoint(p2, 4.0f, c);
+		c.Set(fixed_zero, fixed_one, fixed_zero);
+		draw->DrawPoint(p1, fixed_four, c);
+		draw->DrawPoint(p2, fixed_four, c);
 
-		c.Set(0.8f, 0.8f, 0.8f);
+		c.Set(fixed(8, 10), fixed(8, 10), fixed(8, 10));
 		draw->DrawSegment(p1, p2, c);
 
 	}

@@ -33,8 +33,8 @@ struct b2FrictionJointDef : public b2JointDef
 		type = e_frictionJoint;
 		localAnchorA.SetZero();
 		localAnchorB.SetZero();
-		maxForce = 0.0f;
-		maxTorque = 0.0f;
+		maxForce = fixed_zero;
+		maxTorque = fixed_zero;
 	}
 
 	/// Initialize the bodies, anchors, axis, and reference angle using the world
@@ -48,10 +48,10 @@ struct b2FrictionJointDef : public b2JointDef
 	b2Vec2 localAnchorB;
 
 	/// The maximum friction force in N.
-	float maxForce;
+	fixed maxForce;
 
 	/// The maximum friction torque in N-m.
-	float maxTorque;
+	fixed maxTorque;
 };
 
 /// Friction joint. This is used for top-down friction.
@@ -62,8 +62,8 @@ public:
 	b2Vec2 GetAnchorA() const override;
 	b2Vec2 GetAnchorB() const override;
 
-	b2Vec2 GetReactionForce(float inv_dt) const override;
-	float GetReactionTorque(float inv_dt) const override;
+	b2Vec2 GetReactionForce(fixed inv_dt) const override;
+	fixed GetReactionTorque(fixed inv_dt) const override;
 
 	/// The local anchor point relative to bodyA's origin.
 	const b2Vec2& GetLocalAnchorA() const { return m_localAnchorA; }
@@ -72,16 +72,16 @@ public:
 	const b2Vec2& GetLocalAnchorB() const  { return m_localAnchorB; }
 
 	/// Set the maximum friction force in N.
-	void SetMaxForce(float force);
+	void SetMaxForce(fixed force);
 
 	/// Get the maximum friction force in N.
-	float GetMaxForce() const;
+	fixed GetMaxForce() const;
 
 	/// Set the maximum friction torque in N*m.
-	void SetMaxTorque(float torque);
+	void SetMaxTorque(fixed torque);
 
 	/// Get the maximum friction torque in N*m.
-	float GetMaxTorque() const;
+	fixed GetMaxTorque() const;
 
 	/// Dump joint to dmLog
 	void Dump() override;
@@ -101,9 +101,9 @@ protected:
 
 	// Solver shared
 	b2Vec2 m_linearImpulse;
-	float m_angularImpulse;
-	float m_maxForce;
-	float m_maxTorque;
+	fixed m_angularImpulse;
+	fixed m_maxForce;
+	fixed m_maxTorque;
 
 	// Solver temp
 	int32 m_indexA;
@@ -112,12 +112,12 @@ protected:
 	b2Vec2 m_rB;
 	b2Vec2 m_localCenterA;
 	b2Vec2 m_localCenterB;
-	float m_invMassA;
-	float m_invMassB;
-	float m_invIA;
-	float m_invIB;
+	fixed m_invMassA;
+	fixed m_invMassB;
+	fixed m_invIA;
+	fixed m_invIB;
 	b2Mat22 m_linearMass;
-	float m_angularMass;
+	fixed m_angularMass;
 };
 
 #endif

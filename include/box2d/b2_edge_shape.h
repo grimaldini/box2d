@@ -59,7 +59,7 @@ public:
 	void ComputeAABB(b2AABB* aabb, const b2Transform& transform, int32 childIndex) const override;
 
 	/// @see b2Shape::ComputeMass
-	void ComputeMass(b2MassData* massData, float density) const override;
+	void ComputeMass(b2MassData* massData, fixed density) const override;
 	
 	/// These are the edge vertices
 	b2Vec2 m_vertex1, m_vertex2;
@@ -75,11 +75,11 @@ inline b2EdgeShape::b2EdgeShape()
 {
 	m_type = e_edge;
 	m_radius = b2_polygonRadius;
-	m_vertex0.x = 0.0f;
-	m_vertex0.y = 0.0f;
-	m_vertex3.x = 0.0f;
-	m_vertex3.y = 0.0f;
 	m_oneSided = false;
+	m_vertex0.x = fixed_zero;
+	m_vertex0.y = fixed_zero;
+	m_vertex3.x = fixed_zero;
+	m_vertex3.y = fixed_zero;
 }
 
 #endif

@@ -36,11 +36,11 @@ struct b2DistanceJointDef : public b2JointDef
 	b2DistanceJointDef()
 	{
 		type = e_distanceJoint;
-		localAnchorA.Set(0.0f, 0.0f);
-		localAnchorB.Set(0.0f, 0.0f);
-		length = 1.0f;
-		frequencyHz = 0.0f;
-		dampingRatio = 0.0f;
+		localAnchorA.Set(fixed_zero, fixed_zero);
+		localAnchorB.Set(fixed_zero, fixed_zero);
+		length = fixed_one;
+		frequencyHz = fixed_zero;
+		dampingRatio = fixed_zero;
 	}
 
 	/// Initialize the bodies, anchors, and length using the world
@@ -55,14 +55,14 @@ struct b2DistanceJointDef : public b2JointDef
 	b2Vec2 localAnchorB;
 
 	/// The natural length between the anchor points.
-	float length;
+	fixed length;
 
 	/// The mass-spring-damper frequency in Hertz. A value of 0
 	/// disables softness.
-	float frequencyHz;
+	fixed frequencyHz;
 
 	/// The damping ratio. 0 = no damping, 1 = critical damping.
-	float dampingRatio;
+	fixed dampingRatio;
 };
 
 /// A distance joint constrains two points on two bodies
@@ -77,11 +77,11 @@ public:
 
 	/// Get the reaction force given the inverse time step.
 	/// Unit is N.
-	b2Vec2 GetReactionForce(float inv_dt) const override;
+	b2Vec2 GetReactionForce(fixed inv_dt) const override;
 
 	/// Get the reaction torque given the inverse time step.
 	/// Unit is N*m. This is always zero for a distance joint.
-	float GetReactionTorque(float inv_dt) const override;
+	fixed GetReactionTorque(fixed inv_dt) const override;
 
 	/// The local anchor point relative to bodyA's origin.
 	const b2Vec2& GetLocalAnchorA() const { return m_localAnchorA; }
@@ -91,16 +91,16 @@ public:
 
 	/// Set/get the natural length.
 	/// Manipulating the length can lead to non-physical behavior when the frequency is zero.
-	void SetLength(float length);
-	float GetLength() const;
+	void SetLength(fixed length);
+	fixed GetLength() const;
 
 	/// Set/get frequency in Hz.
-	void SetFrequency(float hz);
-	float GetFrequency() const;
+	void SetFrequency(fixed hz);
+	fixed GetFrequency() const;
 
 	/// Set/get damping ratio.
-	void SetDampingRatio(float ratio);
-	float GetDampingRatio() const;
+	void SetDampingRatio(fixed ratio);
+	fixed GetDampingRatio() const;
 
 	/// Dump joint to dmLog
 	void Dump() override;
@@ -114,16 +114,16 @@ protected:
 	void SolveVelocityConstraints(const b2SolverData& data) override;
 	bool SolvePositionConstraints(const b2SolverData& data) override;
 
-	float m_frequencyHz;
-	float m_dampingRatio;
-	float m_bias;
+	fixed m_frequencyHz;
+	fixed m_dampingRatio;
+	fixed m_bias;
 
 	// Solver shared
 	b2Vec2 m_localAnchorA;
 	b2Vec2 m_localAnchorB;
-	float m_gamma;
-	float m_impulse;
-	float m_length;
+	fixed m_gamma;
+	fixed m_impulse;
+	fixed m_length;
 
 	// Solver temp
 	int32 m_indexA;
@@ -133,39 +133,39 @@ protected:
 	b2Vec2 m_rB;
 	b2Vec2 m_localCenterA;
 	b2Vec2 m_localCenterB;
-	float m_invMassA;
-	float m_invMassB;
-	float m_invIA;
-	float m_invIB;
-	float m_mass;
+	fixed m_invMassA;
+	fixed m_invMassB;
+	fixed m_invIA;
+	fixed m_invIB;
+	fixed m_mass;
 };
 
-inline void b2DistanceJoint::SetLength(float length)
+inline void b2DistanceJoint::SetLength(fixed length)
 {
 	m_length = length;
 }
 
-inline float b2DistanceJoint::GetLength() const
+inline fixed b2DistanceJoint::GetLength() const
 {
 	return m_length;
 }
 
-inline void b2DistanceJoint::SetFrequency(float hz)
+inline void b2DistanceJoint::SetFrequency(fixed hz)
 {
 	m_frequencyHz = hz;
 }
 
-inline float b2DistanceJoint::GetFrequency() const
+inline fixed b2DistanceJoint::GetFrequency() const
 {
 	return m_frequencyHz;
 }
 
-inline void b2DistanceJoint::SetDampingRatio(float ratio)
+inline void b2DistanceJoint::SetDampingRatio(fixed ratio)
 {
 	m_dampingRatio = ratio;
 }
 
-inline float b2DistanceJoint::GetDampingRatio() const
+inline fixed b2DistanceJoint::GetDampingRatio() const
 {
 	return m_dampingRatio;
 }

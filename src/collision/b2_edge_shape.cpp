@@ -85,21 +85,20 @@ bool b2EdgeShape::RayCast(b2RayCastOutput* output, const b2RayCastInput& input,
 	// q = p1 + t * d
 	// dot(normal, q - v1) = 0
 	// dot(normal, p1 - v1) + t * dot(normal, d) = 0
-	float numerator = b2Dot(normal, v1 - p1);
-	if (m_oneSided && numerator > 0.0f)
+	fixed numerator = b2Dot(normal, v1 - p1);
+	if (m_oneSided && numerator > fixed_zero)
 	{
 		return false;
 	}
 
-	float denominator = b2Dot(normal, d);
-
-	if (denominator == 0.0f)
+	fixed denominator = b2Dot(normal, d);
+	if (denominator == fixed_zero)
 	{
 		return false;
 	}
 
-	float t = numerator / denominator;
-	if (t < 0.0f || input.maxFraction < t)
+	fixed t = numerator / denominator;
+	if (t < fixed_zero || input.maxFraction < t)
 	{
 		return false;
 	}
@@ -109,20 +108,20 @@ bool b2EdgeShape::RayCast(b2RayCastOutput* output, const b2RayCastInput& input,
 	// q = v1 + s * r
 	// s = dot(q - v1, r) / dot(r, r)
 	b2Vec2 r = v2 - v1;
-	float rr = b2Dot(r, r);
-	if (rr == 0.0f)
+	fixed rr = b2Dot(r, r);
+	if (rr == fixed_zero)
 	{
 		return false;
 	}
 
-	float s = b2Dot(q - v1, r) / rr;
-	if (s < 0.0f || 1.0f < s)
+	fixed s = b2Dot(q - v1, r) / rr;
+	if (s < fixed_zero || fixed_one < s)
 	{
 		return false;
 	}
 
 	output->fraction = t;
-	if (numerator > 0.0f)
+	if (numerator > fixed_zero)
 	{
 		output->normal = -b2Mul(xf.q, normal);
 	}
@@ -148,11 +147,11 @@ void b2EdgeShape::ComputeAABB(b2AABB* aabb, const b2Transform& xf, int32 childIn
 	aabb->upperBound = upper + r;
 }
 
-void b2EdgeShape::ComputeMass(b2MassData* massData, float density) const
+void b2EdgeShape::ComputeMass(b2MassData* massData, fixed density) const
 {
 	B2_NOT_USED(density);
 
-	massData->mass = 0.0f;
-	massData->center = 0.5f * (m_vertex1 + m_vertex2);
-	massData->I = 0.0f;
+	massData->mass = fixed_zero;
+	massData->center = fixed_half * (m_vertex1 + m_vertex2);
+	massData->I = fixed_zero;
 }

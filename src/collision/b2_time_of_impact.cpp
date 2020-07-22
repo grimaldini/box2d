@@ -29,7 +29,7 @@
 
 #include <stdio.h>
 
-float b2_toiTime, b2_toiMaxTime;
+fixed b2_toiTime, b2_toiMaxTime;
 int32 b2_toiCalls, b2_toiIters, b2_toiMaxIters;
 int32 b2_toiRootIters, b2_toiMaxRootIters;
 
@@ -45,10 +45,10 @@ struct b2SeparationFunction
 
 	// TODO_ERIN might not need to return the separation
 
-	float Initialize(const b2SimplexCache* cache,
+	fixed Initialize(const b2SimplexCache* cache,
 		const b2DistanceProxy* proxyA, const b2Sweep& sweepA,
 		const b2DistanceProxy* proxyB, const b2Sweep& sweepB,
-		float t1)
+		fixed t1)
 	{
 		m_proxyA = proxyA;
 		m_proxyB = proxyB;
@@ -70,7 +70,7 @@ struct b2SeparationFunction
 			b2Vec2 pointA = b2Mul(xfA, localPointA);
 			b2Vec2 pointB = b2Mul(xfB, localPointB);
 			m_axis = pointB - pointA;
-			float s = m_axis.Normalize();
+			fixed s = m_axis.Normalize();
 			return s;
 		}
 		else if (cache->indexA[0] == cache->indexA[1])
@@ -80,18 +80,18 @@ struct b2SeparationFunction
 			b2Vec2 localPointB1 = proxyB->GetVertex(cache->indexB[0]);
 			b2Vec2 localPointB2 = proxyB->GetVertex(cache->indexB[1]);
 
-			m_axis = b2Cross(localPointB2 - localPointB1, 1.0f);
+			m_axis = b2Cross(localPointB2 - localPointB1, fixed_one);
 			m_axis.Normalize();
 			b2Vec2 normal = b2Mul(xfB.q, m_axis);
 
-			m_localPoint = 0.5f * (localPointB1 + localPointB2);
+			m_localPoint = fixed_half * (localPointB1 + localPointB2);
 			b2Vec2 pointB = b2Mul(xfB, m_localPoint);
 
 			b2Vec2 localPointA = proxyA->GetVertex(cache->indexA[0]);
 			b2Vec2 pointA = b2Mul(xfA, localPointA);
 
-			float s = b2Dot(pointA - pointB, normal);
-			if (s < 0.0f)
+			fixed s = b2Dot(pointA - pointB, normal);
+			if (s < fixed_zero)
 			{
 				m_axis = -m_axis;
 				s = -s;
@@ -105,18 +105,18 @@ struct b2SeparationFunction
 			b2Vec2 localPointA1 = m_proxyA->GetVertex(cache->indexA[0]);
 			b2Vec2 localPointA2 = m_proxyA->GetVertex(cache->indexA[1]);
 			
-			m_axis = b2Cross(localPointA2 - localPointA1, 1.0f);
+			m_axis = b2Cross(localPointA2 - localPointA1, fixed_one);
 			m_axis.Normalize();
 			b2Vec2 normal = b2Mul(xfA.q, m_axis);
 
-			m_localPoint = 0.5f * (localPointA1 + localPointA2);
+			m_localPoint = fixed_half * (localPointA1 + localPointA2);
 			b2Vec2 pointA = b2Mul(xfA, m_localPoint);
 
 			b2Vec2 localPointB = m_proxyB->GetVertex(cache->indexB[0]);
 			b2Vec2 pointB = b2Mul(xfB, localPointB);
 
-			float s = b2Dot(pointB - pointA, normal);
-			if (s < 0.0f)
+			fixed s = b2Dot(pointB - pointA, normal);
+			if (s < fixed_zero)
 			{
 				m_axis = -m_axis;
 				s = -s;
@@ -126,7 +126,7 @@ struct b2SeparationFunction
 	}
 
 	//
-	float FindMinSeparation(int32* indexA, int32* indexB, float t) const
+	fixed FindMinSeparation(int32* indexA, int32* indexB, fixed t) const
 	{
 		b2Transform xfA, xfB;
 		m_sweepA.GetTransform(&xfA, t);
@@ -148,7 +148,7 @@ struct b2SeparationFunction
 				b2Vec2 pointA = b2Mul(xfA, localPointA);
 				b2Vec2 pointB = b2Mul(xfB, localPointB);
 
-				float separation = b2Dot(pointB - pointA, m_axis);
+				fixed separation = b2Dot(pointB - pointA, m_axis);
 				return separation;
 			}
 
@@ -165,7 +165,7 @@ struct b2SeparationFunction
 				b2Vec2 localPointB = m_proxyB->GetVertex(*indexB);
 				b2Vec2 pointB = b2Mul(xfB, localPointB);
 
-				float separation = b2Dot(pointB - pointA, normal);
+				fixed separation = b2Dot(pointB - pointA, normal);
 				return separation;
 			}
 
@@ -182,7 +182,7 @@ struct b2SeparationFunction
 				b2Vec2 localPointA = m_proxyA->GetVertex(*indexA);
 				b2Vec2 pointA = b2Mul(xfA, localPointA);
 
-				float separation = b2Dot(pointA - pointB, normal);
+				fixed separation = b2Dot(pointA - pointB, normal);
 				return separation;
 			}
 
@@ -190,12 +190,12 @@ struct b2SeparationFunction
 			b2Assert(false);
 			*indexA = -1;
 			*indexB = -1;
-			return 0.0f;
+			return fixed_zero;
 		}
 	}
 
 	//
-	float Evaluate(int32 indexA, int32 indexB, float t) const
+	fixed Evaluate(int32 indexA, int32 indexB, fixed t) const
 	{
 		b2Transform xfA, xfB;
 		m_sweepA.GetTransform(&xfA, t);
@@ -210,7 +210,7 @@ struct b2SeparationFunction
 
 				b2Vec2 pointA = b2Mul(xfA, localPointA);
 				b2Vec2 pointB = b2Mul(xfB, localPointB);
-				float separation = b2Dot(pointB - pointA, m_axis);
+				fixed separation = b2Dot(pointB - pointA, m_axis);
 
 				return separation;
 			}
@@ -223,7 +223,7 @@ struct b2SeparationFunction
 				b2Vec2 localPointB = m_proxyB->GetVertex(indexB);
 				b2Vec2 pointB = b2Mul(xfB, localPointB);
 
-				float separation = b2Dot(pointB - pointA, normal);
+				fixed separation = b2Dot(pointB - pointA, normal);
 				return separation;
 			}
 
@@ -235,13 +235,13 @@ struct b2SeparationFunction
 				b2Vec2 localPointA = m_proxyA->GetVertex(indexA);
 				b2Vec2 pointA = b2Mul(xfA, localPointA);
 
-				float separation = b2Dot(pointA - pointB, normal);
+				fixed separation = b2Dot(pointA - pointB, normal);
 				return separation;
 			}
 
 		default:
 			b2Assert(false);
-			return 0.0f;
+			return fixed_zero;
 		}
 	}
 
@@ -275,14 +275,14 @@ void b2TimeOfImpact(b2TOIOutput* output, const b2TOIInput* input)
 	sweepA.Normalize();
 	sweepB.Normalize();
 
-	float tMax = input->tMax;
+	fixed tMax = input->tMax;
 
-	float totalRadius = proxyA->m_radius + proxyB->m_radius;
-	float target = b2Max(b2_linearSlop, totalRadius - 3.0f * b2_linearSlop);
-	float tolerance = 0.25f * b2_linearSlop;
+	fixed totalRadius = proxyA->m_radius + proxyB->m_radius;
+	fixed target = b2Max(b2_linearSlop, totalRadius - fixed_three * b2_linearSlop);
+	fixed tolerance = fixed_quarter * b2_linearSlop;
 	b2Assert(target > tolerance);
 
-	float t1 = 0.0f;
+	fixed t1 = fixed_zero;
 	const int32 k_maxIterations = 20;	// TODO_ERIN b2Settings
 	int32 iter = 0;
 
@@ -310,11 +310,11 @@ void b2TimeOfImpact(b2TOIOutput* output, const b2TOIInput* input)
 		b2Distance(&distanceOutput, &cache, &distanceInput);
 
 		// If the shapes are overlapped, we give up on continuous collision.
-		if (distanceOutput.distance <= 0.0f)
+		if (distanceOutput.distance <= fixed_zero)
 		{
 			// Failure!
 			output->state = b2TOIOutput::e_overlapped;
-			output->t = 0.0f;
+			output->t = fixed_zero;
 			break;
 		}
 
@@ -333,17 +333,17 @@ void b2TimeOfImpact(b2TOIOutput* output, const b2TOIInput* input)
 		// Dump the curve seen by the root finder
 		{
 			const int32 N = 100;
-			float dx = 1.0f / N;
-			float xs[N+1];
-			float fs[N+1];
+			fixed dx = fixed_one / fixed(N);
+			fixed xs[N+1];
+			fixed fs[N+1];
 
-			float x = 0.0f;
+			fixed x = fixed_zero;
 
 			for (int32 i = 0; i <= N; ++i)
 			{
 				sweepA.GetTransform(&xfA, x);
 				sweepB.GetTransform(&xfB, x);
-				float f = fcn.Evaluate(xfA, xfB) - target;
+				fixed f = fcn.Evaluate(xfA, xfB) - target;
 
 				printf("%g %g\n", x, f);
 
@@ -358,13 +358,13 @@ void b2TimeOfImpact(b2TOIOutput* output, const b2TOIInput* input)
 		// Compute the TOI on the separating axis. We do this by successively
 		// resolving the deepest point. This loop is bounded by the number of vertices.
 		bool done = false;
-		float t2 = tMax;
+		fixed t2 = tMax;
 		int32 pushBackIter = 0;
 		for (;;)
 		{
 			// Find the deepest point at t2. Store the witness point indices.
 			int32 indexA, indexB;
-			float s2 = fcn.FindMinSeparation(&indexA, &indexB, t2);
+			fixed s2 = fcn.FindMinSeparation(&indexA, &indexB, t2);
 
 			// Is the final configuration separated?
 			if (s2 > target + tolerance)
@@ -385,7 +385,7 @@ void b2TimeOfImpact(b2TOIOutput* output, const b2TOIInput* input)
 			}
 
 			// Compute the initial separation of the witness points.
-			float s1 = fcn.Evaluate(indexA, indexB, t1);
+			fixed s1 = fcn.Evaluate(indexA, indexB, t1);
 
 			// Check for initial overlap. This might happen if the root finder
 			// runs out of iterations.
@@ -400,7 +400,7 @@ void b2TimeOfImpact(b2TOIOutput* output, const b2TOIInput* input)
 			// Check for touching
 			if (s1 <= target + tolerance)
 			{
-				// Victory! t1 should hold the TOI (could be 0.0).
+				// Victory! t1 should hold the TOI (could be 0).
 				output->state = b2TOIOutput::e_touching;
 				output->t = t1;
 				done = true;
@@ -409,11 +409,11 @@ void b2TimeOfImpact(b2TOIOutput* output, const b2TOIInput* input)
 
 			// Compute 1D root of: f(x) - target = 0
 			int32 rootIterCount = 0;
-			float a1 = t1, a2 = t2;
+			fixed a1 = t1, a2 = t2;
 			for (;;)
 			{
 				// Use a mix of the secant rule and bisection.
-				float t;
+				fixed t;
 				if (rootIterCount & 1)
 				{
 					// Secant rule to improve convergence.
@@ -422,13 +422,13 @@ void b2TimeOfImpact(b2TOIOutput* output, const b2TOIInput* input)
 				else
 				{
 					// Bisection to guarantee progress.
-					t = 0.5f * (a1 + a2);
+					t = fixed_half * (a1 + a2);
 				}
 
 				++rootIterCount;
 				++b2_toiRootIters;
 
-				float s = fcn.Evaluate(indexA, indexB, t);
+				fixed s = fcn.Evaluate(indexA, indexB, t);
 
 				if (b2Abs(s - target) < tolerance)
 				{
@@ -484,7 +484,7 @@ void b2TimeOfImpact(b2TOIOutput* output, const b2TOIInput* input)
 
 	b2_toiMaxIters = b2Max(b2_toiMaxIters, iter);
 
-	float time = timer.GetMilliseconds();
+	fixed time = timer.GetMilliseconds();
 	b2_toiMaxTime = b2Max(b2_toiMaxTime, time);
 	b2_toiTime += time;
 }

@@ -73,8 +73,8 @@ union b2ContactID
 struct b2ManifoldPoint
 {
 	b2Vec2 localPoint;		///< usage depends on manifold type
-	float normalImpulse;	///< the non-penetration impulse
-	float tangentImpulse;	///< the friction impulse
+	fixed normalImpulse;	///< the non-penetration impulse
+	fixed tangentImpulse;	///< the friction impulse
 	b2ContactID id;			///< uniquely identifies a contact point between two shapes
 };
 
@@ -118,12 +118,12 @@ struct b2WorldManifold
 	/// point count, impulses, etc. The radii must come from the shapes
 	/// that generated the manifold.
 	void Initialize(const b2Manifold* manifold,
-					const b2Transform& xfA, float radiusA,
-					const b2Transform& xfB, float radiusB);
+					const b2Transform& xfA, fixed radiusA,
+					const b2Transform& xfB, fixed radiusB);
 
 	b2Vec2 normal;								///< world vector pointing from A to B
 	b2Vec2 points[b2_maxManifoldPoints];		///< world contact point (point of intersection)
-	float separations[b2_maxManifoldPoints];	///< a negative value indicates overlap, in meters
+	fixed separations[b2_maxManifoldPoints];	///< a negative value indicates overlap, in meters
 };
 
 /// This is used for determining the state of contact points.
@@ -151,7 +151,7 @@ struct b2ClipVertex
 struct b2RayCastInput
 {
 	b2Vec2 p1, p2;
-	float maxFraction;
+	fixed maxFraction;
 };
 
 /// Ray-cast output data. The ray hits at p1 + fraction * (p2 - p1), where p1 and p2
@@ -159,7 +159,7 @@ struct b2RayCastInput
 struct b2RayCastOutput
 {
 	b2Vec2 normal;
-	float fraction;
+	fixed fraction;
 };
 
 /// An axis aligned bounding box.
@@ -171,21 +171,21 @@ struct b2AABB
 	/// Get the center of the AABB.
 	b2Vec2 GetCenter() const
 	{
-		return 0.5f * (lowerBound + upperBound);
+		return fixed_half * (lowerBound + upperBound);
 	}
 
 	/// Get the extents of the AABB (half-widths).
 	b2Vec2 GetExtents() const
 	{
-		return 0.5f * (upperBound - lowerBound);
+		return fixed_half * (upperBound - lowerBound);
 	}
 
 	/// Get the perimeter length
-	float GetPerimeter() const
+	fixed GetPerimeter() const
 	{
-		float wx = upperBound.x - lowerBound.x;
-		float wy = upperBound.y - lowerBound.y;
-		return 2.0f * (wx + wy);
+		fixed wx = upperBound.x - lowerBound.x;
+		fixed wy = upperBound.y - lowerBound.y;
+		return fixed_two * (wx + wy);
 	}
 
 	/// Combine an AABB into this one.
@@ -246,7 +246,7 @@ void b2CollideEdgeAndPolygon(b2Manifold* manifold,
 
 /// Clipping for contact manifolds.
 int32 b2ClipSegmentToLine(b2ClipVertex vOut[2], const b2ClipVertex vIn[2],
-							const b2Vec2& normal, float offset, int32 vertexIndexA);
+							const b2Vec2& normal, fixed offset, int32 vertexIndexA);
 
 /// Determine if two generic shapes overlap.
 bool b2TestOverlap(	const b2Shape* shapeA, int32 indexA,
@@ -258,7 +258,7 @@ bool b2TestOverlap(	const b2Shape* shapeA, int32 indexA,
 inline bool b2AABB::IsValid() const
 {
 	b2Vec2 d = upperBound - lowerBound;
-	bool valid = d.x >= 0.0f && d.y >= 0.0f;
+	bool valid = d.x >= fixed_zero && d.y >= fixed_zero;
 	valid = valid && lowerBound.IsValid() && upperBound.IsValid();
 	return valid;
 }
@@ -269,10 +269,10 @@ inline bool b2TestOverlap(const b2AABB& a, const b2AABB& b)
 	d1 = b.lowerBound - a.upperBound;
 	d2 = a.lowerBound - b.upperBound;
 
-	if (d1.x > 0.0f || d1.y > 0.0f)
+	if (d1.x > fixed_zero || d1.y > fixed_zero)
 		return false;
 
-	if (d2.x > 0.0f || d2.y > 0.0f)
+	if (d2.x > fixed_zero || d2.y > fixed_zero)
 		return false;
 
 	return true;

@@ -51,7 +51,7 @@ b2FrictionJoint::b2FrictionJoint(const b2FrictionJointDef* def)
 	m_localAnchorB = def->localAnchorB;
 
 	m_linearImpulse.SetZero();
-	m_angularImpulse = 0.0f;
+	m_angularImpulse = fixed_zero;
 
 	m_maxForce = def->maxForce;
 	m_maxTorque = def->maxTorque;
@@ -68,13 +68,13 @@ void b2FrictionJoint::InitVelocityConstraints(const b2SolverData& data)
 	m_invIA = m_bodyA->m_invI;
 	m_invIB = m_bodyB->m_invI;
 
-	float aA = data.positions[m_indexA].a;
+	fixed aA = data.positions[m_indexA].a;
 	b2Vec2 vA = data.velocities[m_indexA].v;
-	float wA = data.velocities[m_indexA].w;
+	fixed wA = data.velocities[m_indexA].w;
 
-	float aB = data.positions[m_indexB].a;
+	fixed aB = data.positions[m_indexB].a;
 	b2Vec2 vB = data.velocities[m_indexB].v;
-	float wB = data.velocities[m_indexB].w;
+	fixed wB = data.velocities[m_indexB].w;
 
 	b2Rot qA(aA), qB(aB);
 
@@ -91,8 +91,8 @@ void b2FrictionJoint::InitVelocityConstraints(const b2SolverData& data)
 	//     [  -r1y*iA*r1x-r2y*iB*r2x, mA+r1x^2*iA+mB+r2x^2*iB,           r1x*iA+r2x*iB]
 	//     [          -r1y*iA-r2y*iB,           r1x*iA+r2x*iB,                   iA+iB]
 
-	float mA = m_invMassA, mB = m_invMassB;
-	float iA = m_invIA, iB = m_invIB;
+	fixed mA = m_invMassA, mB = m_invMassB;
+	fixed iA = m_invIA, iB = m_invIB;
 
 	b2Mat22 K;
 	K.ex.x = mA + mB + iA * m_rA.y * m_rA.y + iB * m_rB.y * m_rB.y;
@@ -103,9 +103,9 @@ void b2FrictionJoint::InitVelocityConstraints(const b2SolverData& data)
 	m_linearMass = K.GetInverse();
 
 	m_angularMass = iA + iB;
-	if (m_angularMass > 0.0f)
+	if (m_angularMass > fixed_zero)
 	{
-		m_angularMass = 1.0f / m_angularMass;
+		m_angularMass = fixed_one / m_angularMass;
 	}
 
 	if (data.step.warmStarting)
@@ -123,7 +123,7 @@ void b2FrictionJoint::InitVelocityConstraints(const b2SolverData& data)
 	else
 	{
 		m_linearImpulse.SetZero();
-		m_angularImpulse = 0.0f;
+		m_angularImpulse = fixed_zero;
 	}
 
 	data.velocities[m_indexA].v = vA;
@@ -135,22 +135,22 @@ void b2FrictionJoint::InitVelocityConstraints(const b2SolverData& data)
 void b2FrictionJoint::SolveVelocityConstraints(const b2SolverData& data)
 {
 	b2Vec2 vA = data.velocities[m_indexA].v;
-	float wA = data.velocities[m_indexA].w;
+	fixed wA = data.velocities[m_indexA].w;
 	b2Vec2 vB = data.velocities[m_indexB].v;
-	float wB = data.velocities[m_indexB].w;
+	fixed wB = data.velocities[m_indexB].w;
 
-	float mA = m_invMassA, mB = m_invMassB;
-	float iA = m_invIA, iB = m_invIB;
+	fixed mA = m_invMassA, mB = m_invMassB;
+	fixed iA = m_invIA, iB = m_invIB;
 
-	float h = data.step.dt;
+	fixed h = data.step.dt;
 
 	// Solve angular friction
 	{
-		float Cdot = wB - wA;
-		float impulse = -m_angularMass * Cdot;
+		fixed Cdot = wB - wA;
+		fixed impulse = -m_angularMass * Cdot;
 
-		float oldImpulse = m_angularImpulse;
-		float maxImpulse = h * m_maxTorque;
+		fixed oldImpulse = m_angularImpulse;
+		fixed maxImpulse = h * m_maxTorque;
 		m_angularImpulse = b2Clamp(m_angularImpulse + impulse, -maxImpulse, maxImpulse);
 		impulse = m_angularImpulse - oldImpulse;
 
@@ -166,7 +166,7 @@ void b2FrictionJoint::SolveVelocityConstraints(const b2SolverData& data)
 		b2Vec2 oldImpulse = m_linearImpulse;
 		m_linearImpulse += impulse;
 
-		float maxImpulse = h * m_maxForce;
+		fixed maxImpulse = h * m_maxForce;
 
 		if (m_linearImpulse.LengthSquared() > maxImpulse * maxImpulse)
 		{
@@ -206,34 +206,34 @@ b2Vec2 b2FrictionJoint::GetAnchorB() const
 	return m_bodyB->GetWorldPoint(m_localAnchorB);
 }
 
-b2Vec2 b2FrictionJoint::GetReactionForce(float inv_dt) const
+b2Vec2 b2FrictionJoint::GetReactionForce(fixed inv_dt) const
 {
 	return inv_dt * m_linearImpulse;
 }
 
-float b2FrictionJoint::GetReactionTorque(float inv_dt) const
+fixed b2FrictionJoint::GetReactionTorque(fixed inv_dt) const
 {
 	return inv_dt * m_angularImpulse;
 }
 
-void b2FrictionJoint::SetMaxForce(float force)
+void b2FrictionJoint::SetMaxForce(fixed force)
 {
-	b2Assert(b2IsValid(force) && force >= 0.0f);
+	b2Assert(b2IsValid(force) && force >= fixed_zero);
 	m_maxForce = force;
 }
 
-float b2FrictionJoint::GetMaxForce() const
+fixed b2FrictionJoint::GetMaxForce() const
 {
 	return m_maxForce;
 }
 
-void b2FrictionJoint::SetMaxTorque(float torque)
+void b2FrictionJoint::SetMaxTorque(fixed torque)
 {
-	b2Assert(b2IsValid(torque) && torque >= 0.0f);
+	b2Assert(b2IsValid(torque) && torque >= fixed_zero);
 	m_maxTorque = torque;
 }
 
-float b2FrictionJoint::GetMaxTorque() const
+fixed b2FrictionJoint::GetMaxTorque() const
 {
 	return m_maxTorque;
 }

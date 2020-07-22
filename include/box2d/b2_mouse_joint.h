@@ -32,10 +32,10 @@ struct b2MouseJointDef : public b2JointDef
 	b2MouseJointDef()
 	{
 		type = e_mouseJoint;
-		target.Set(0.0f, 0.0f);
-		maxForce = 0.0f;
-		frequencyHz = 5.0f;
-		dampingRatio = 0.7f;
+		frequencyHz = fixed_five;
+		target.Set(fixed_zero, fixed_zero);
+		maxForce = fixed_zero;
+		dampingRatio = fixed(7, 10);
 	}
 
 	/// The initial world target point. This is assumed
@@ -45,13 +45,13 @@ struct b2MouseJointDef : public b2JointDef
 	/// The maximum constraint force that can be exerted
 	/// to move the candidate body. Usually you will express
 	/// as some multiple of the weight (multiplier * mass * gravity).
-	float maxForce;
+	fixed maxForce;
 
 	/// The response speed.
-	float frequencyHz;
+	fixed frequencyHz;
 
 	/// The damping ratio. 0 = no damping, 1 = critical damping.
-	float dampingRatio;
+	fixed dampingRatio;
 };
 
 /// A mouse joint is used to make a point on a body track a
@@ -72,26 +72,26 @@ public:
 	b2Vec2 GetAnchorB() const override;
 
 	/// Implements b2Joint.
-	b2Vec2 GetReactionForce(float inv_dt) const override;
+	b2Vec2 GetReactionForce(fixed inv_dt) const override;
 
 	/// Implements b2Joint.
-	float GetReactionTorque(float inv_dt) const override;
+	fixed GetReactionTorque(fixed inv_dt) const override;
 
 	/// Use this to update the target point.
 	void SetTarget(const b2Vec2& target);
 	const b2Vec2& GetTarget() const;
 
 	/// Set/get the maximum force in Newtons.
-	void SetMaxForce(float force);
-	float GetMaxForce() const;
+	void SetMaxForce(fixed force);
+	fixed GetMaxForce() const;
 
 	/// Set/get the frequency in Hertz.
-	void SetFrequency(float hz);
-	float GetFrequency() const;
+	void SetFrequency(fixed hz);
+	fixed GetFrequency() const;
 
 	/// Set/get the damping ratio (dimensionless).
-	void SetDampingRatio(float ratio);
-	float GetDampingRatio() const;
+	void SetDampingRatio(fixed ratio);
+	fixed GetDampingRatio() const;
 
 	/// The mouse joint does not support dumping.
 	void Dump() override { b2Log("Mouse joint dumping is not supported.\n"); }
@@ -110,22 +110,22 @@ protected:
 
 	b2Vec2 m_localAnchorB;
 	b2Vec2 m_targetA;
-	float m_frequencyHz;
-	float m_dampingRatio;
-	float m_beta;
+	fixed m_frequencyHz;
+	fixed m_dampingRatio;
+	fixed m_beta;
 	
 	// Solver shared
 	b2Vec2 m_impulse;
-	float m_maxForce;
-	float m_gamma;
+	fixed m_maxForce;
+	fixed m_gamma;
 
 	// Solver temp
 	int32 m_indexA;
 	int32 m_indexB;
 	b2Vec2 m_rB;
 	b2Vec2 m_localCenterB;
-	float m_invMassB;
-	float m_invIB;
+	fixed m_invMassB;
+	fixed m_invIB;
 	b2Mat22 m_mass;
 	b2Vec2 m_C;
 };

@@ -41,13 +41,13 @@ struct b2RevoluteJointDef : public b2JointDef
 	b2RevoluteJointDef()
 	{
 		type = e_revoluteJoint;
-		localAnchorA.Set(0.0f, 0.0f);
-		localAnchorB.Set(0.0f, 0.0f);
-		referenceAngle = 0.0f;
-		lowerAngle = 0.0f;
-		upperAngle = 0.0f;
-		maxMotorTorque = 0.0f;
-		motorSpeed = 0.0f;
+		localAnchorA.Set(fixed_zero, fixed_zero);
+		localAnchorB.Set(fixed_zero, fixed_zero);
+		referenceAngle = fixed_zero;
+		lowerAngle = fixed_zero;
+		upperAngle = fixed_zero;
+		maxMotorTorque = fixed_zero;
+		motorSpeed = fixed_zero;
 		enableLimit = false;
 		enableMotor = false;
 	}
@@ -63,26 +63,26 @@ struct b2RevoluteJointDef : public b2JointDef
 	b2Vec2 localAnchorB;
 
 	/// The bodyB angle minus bodyA angle in the reference state (radians).
-	float referenceAngle;
+	fixed referenceAngle;
 
 	/// A flag to enable joint limits.
 	bool enableLimit;
 
 	/// The lower angle for the joint limit (radians).
-	float lowerAngle;
+	fixed lowerAngle;
 
 	/// The upper angle for the joint limit (radians).
-	float upperAngle;
+	fixed upperAngle;
 
 	/// A flag to enable the joint motor.
 	bool enableMotor;
 
 	/// The desired motor speed. Usually in radians per second.
-	float motorSpeed;
+	fixed motorSpeed;
 
 	/// The maximum motor torque used to achieve the desired motor speed.
 	/// Usually in N-m.
-	float maxMotorTorque;
+	fixed maxMotorTorque;
 };
 
 /// A revolute joint constrains two bodies to share a common point while they
@@ -104,13 +104,13 @@ public:
 	const b2Vec2& GetLocalAnchorB() const  { return m_localAnchorB; }
 
 	/// Get the reference angle.
-	float GetReferenceAngle() const { return m_referenceAngle; }
+	fixed GetReferenceAngle() const { return m_referenceAngle; }
 
 	/// Get the current joint angle in radians.
-	float GetJointAngle() const;
+	fixed GetJointAngle() const;
 
 	/// Get the current joint angle speed in radians per second.
-	float GetJointSpeed() const;
+	fixed GetJointSpeed() const;
 
 	/// Is the joint limit enabled?
 	bool IsLimitEnabled() const;
@@ -119,13 +119,13 @@ public:
 	void EnableLimit(bool flag);
 
 	/// Get the lower joint limit in radians.
-	float GetLowerLimit() const;
+	fixed GetLowerLimit() const;
 
 	/// Get the upper joint limit in radians.
-	float GetUpperLimit() const;
+	fixed GetUpperLimit() const;
 
 	/// Set the joint limits in radians.
-	void SetLimits(float lower, float upper);
+	void SetLimits(fixed lower, fixed upper);
 
 	/// Is the joint motor enabled?
 	bool IsMotorEnabled() const;
@@ -134,26 +134,26 @@ public:
 	void EnableMotor(bool flag);
 
 	/// Set the motor speed in radians per second.
-	void SetMotorSpeed(float speed);
+	void SetMotorSpeed(fixed speed);
 
 	/// Get the motor speed in radians per second.
-	float GetMotorSpeed() const;
+	fixed GetMotorSpeed() const;
 
 	/// Set the maximum motor torque, usually in N-m.
-	void SetMaxMotorTorque(float torque);
-	float GetMaxMotorTorque() const { return m_maxMotorTorque; }
+	void SetMaxMotorTorque(fixed torque);
+	fixed GetMaxMotorTorque() const { return m_maxMotorTorque; }
 
 	/// Get the reaction force given the inverse time step.
 	/// Unit is N.
-	b2Vec2 GetReactionForce(float inv_dt) const override;
+	b2Vec2 GetReactionForce(fixed inv_dt) const override;
 
 	/// Get the reaction torque due to the joint limit given the inverse time step.
 	/// Unit is N*m.
-	float GetReactionTorque(float inv_dt) const override;
+	fixed GetReactionTorque(fixed inv_dt) const override;
 
 	/// Get the current motor torque given the inverse time step.
 	/// Unit is N*m.
-	float GetMotorTorque(float inv_dt) const;
+	fixed GetMotorTorque(fixed inv_dt) const;
 
 	/// Dump to b2Log.
 	void Dump() override;
@@ -173,16 +173,16 @@ protected:
 	b2Vec2 m_localAnchorA;
 	b2Vec2 m_localAnchorB;
 	b2Vec3 m_impulse;
-	float m_motorImpulse;
+	fixed m_motorImpulse;
 
 	bool m_enableMotor;
-	float m_maxMotorTorque;
-	float m_motorSpeed;
+	fixed m_maxMotorTorque;
+	fixed m_motorSpeed;
 
 	bool m_enableLimit;
-	float m_referenceAngle;
-	float m_lowerAngle;
-	float m_upperAngle;
+	fixed m_referenceAngle;
+	fixed m_lowerAngle;
+	fixed m_upperAngle;
 
 	// Solver temp
 	int32 m_indexA;
@@ -191,16 +191,16 @@ protected:
 	b2Vec2 m_rB;
 	b2Vec2 m_localCenterA;
 	b2Vec2 m_localCenterB;
-	float m_invMassA;
-	float m_invMassB;
-	float m_invIA;
-	float m_invIB;
+	fixed m_invMassA;
+	fixed m_invMassB;
+	fixed m_invIA;
+	fixed m_invIB;
 	b2Mat33 m_mass;			// effective mass for point-to-point constraint.
-	float m_motorMass;	// effective mass for motor/limit angular constraint.
+	fixed m_motorMass;	// effective mass for motor/limit angular constraint.
 	b2LimitState m_limitState;
 };
 
-inline float b2RevoluteJoint::GetMotorSpeed() const
+inline fixed b2RevoluteJoint::GetMotorSpeed() const
 {
 	return m_motorSpeed;
 }

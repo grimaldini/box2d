@@ -24,8 +24,8 @@
 #include "box2d/b2_distance.h"
 
 void b2WorldManifold::Initialize(const b2Manifold* manifold,
-						  const b2Transform& xfA, float radiusA,
-						  const b2Transform& xfB, float radiusB)
+						  const b2Transform& xfA, fixed radiusA,
+						  const b2Transform& xfB, fixed radiusB)
 {
 	if (manifold->pointCount == 0)
 	{
@@ -36,7 +36,7 @@ void b2WorldManifold::Initialize(const b2Manifold* manifold,
 	{
 	case b2Manifold::e_circles:
 		{
-			normal.Set(1.0f, 0.0f);
+			normal.Set(fixed_one, fixed_zero);
 			b2Vec2 pointA = b2Mul(xfA, manifold->localPoint);
 			b2Vec2 pointB = b2Mul(xfB, manifold->points[0].localPoint);
 			if (b2DistanceSquared(pointA, pointB) > b2_epsilon * b2_epsilon)
@@ -47,7 +47,7 @@ void b2WorldManifold::Initialize(const b2Manifold* manifold,
 
 			b2Vec2 cA = pointA + radiusA * normal;
 			b2Vec2 cB = pointB - radiusB * normal;
-			points[0] = 0.5f * (cA + cB);
+			points[0] = fixed_half * (cA + cB);
 			separations[0] = b2Dot(cB - cA, normal);
 		}
 		break;
@@ -62,7 +62,7 @@ void b2WorldManifold::Initialize(const b2Manifold* manifold,
 				b2Vec2 clipPoint = b2Mul(xfB, manifold->points[i].localPoint);
 				b2Vec2 cA = clipPoint + (radiusA - b2Dot(clipPoint - planePoint, normal)) * normal;
 				b2Vec2 cB = clipPoint - radiusB * normal;
-				points[i] = 0.5f * (cA + cB);
+				points[i] = fixed_half * (cA + cB);
 				separations[i] = b2Dot(cB - cA, normal);
 			}
 		}
@@ -78,7 +78,7 @@ void b2WorldManifold::Initialize(const b2Manifold* manifold,
 				b2Vec2 clipPoint = b2Mul(xfA, manifold->points[i].localPoint);
 				b2Vec2 cB = clipPoint + (radiusB - b2Dot(clipPoint - planePoint, normal)) * normal;
 				b2Vec2 cA = clipPoint - radiusA * normal;
-				points[i] = 0.5f * (cA + cB);
+				points[i] = fixed_half * (cA + cB);
 				separations[i] = b2Dot(cA - cB, normal);
 			}
 
@@ -136,8 +136,8 @@ void b2GetPointStates(b2PointState state1[b2_maxManifoldPoints], b2PointState st
 // From Real-time Collision Detection, p179.
 bool b2AABB::RayCast(b2RayCastOutput* output, const b2RayCastInput& input) const
 {
-	float tmin = -b2_maxFloat;
-	float tmax = b2_maxFloat;
+	fixed tmin = -b2_max;
+	fixed tmax = b2_max;
 
 	b2Vec2 p = input.p1;
 	b2Vec2 d = input.p2 - input.p1;
@@ -157,17 +157,17 @@ bool b2AABB::RayCast(b2RayCastOutput* output, const b2RayCastInput& input) const
 		}
 		else
 		{
-			float inv_d = 1.0f / d(i);
-			float t1 = (lowerBound(i) - p(i)) * inv_d;
-			float t2 = (upperBound(i) - p(i)) * inv_d;
+			fixed inv_d = fixed_one / d(i);
+			fixed t1 = (lowerBound(i) - p(i)) * inv_d;
+			fixed t2 = (upperBound(i) - p(i)) * inv_d;
 
 			// Sign of the normal vector.
-			float s = -1.0f;
+			fixed s = -fixed_one;
 
 			if (t1 > t2)
 			{
 				b2Swap(t1, t2);
-				s = 1.0f;
+				s = fixed_one;
 			}
 
 			// Push the min up
@@ -190,7 +190,7 @@ bool b2AABB::RayCast(b2RayCastOutput* output, const b2RayCastInput& input) const
 
 	// Does the ray start inside the box?
 	// Does the ray intersect beyond the max fraction?
-	if (tmin < 0.0f || input.maxFraction < tmin)
+	if (tmin < fixed_zero || input.maxFraction < tmin)
 	{
 		return false;
 	}
@@ -203,24 +203,24 @@ bool b2AABB::RayCast(b2RayCastOutput* output, const b2RayCastInput& input) const
 
 // Sutherland-Hodgman clipping.
 int32 b2ClipSegmentToLine(b2ClipVertex vOut[2], const b2ClipVertex vIn[2],
-						const b2Vec2& normal, float offset, int32 vertexIndexA)
+						const b2Vec2& normal, fixed offset, int32 vertexIndexA)
 {
 	// Start with no output points
 	int32 count = 0;
 
 	// Calculate the distance of end points to the line
-	float distance0 = b2Dot(normal, vIn[0].v) - offset;
-	float distance1 = b2Dot(normal, vIn[1].v) - offset;
+	fixed distance0 = b2Dot(normal, vIn[0].v) - offset;
+	fixed distance1 = b2Dot(normal, vIn[1].v) - offset;
 
 	// If the points are behind the plane
-	if (distance0 <= 0.0f) vOut[count++] = vIn[0];
-	if (distance1 <= 0.0f) vOut[count++] = vIn[1];
+	if (distance0 <= fixed_zero) vOut[count++] = vIn[0];
+	if (distance1 <= fixed_zero) vOut[count++] = vIn[1];
 
 	// If the points are on different sides of the plane
-	if (distance0 * distance1 < 0.0f)
+	if (distance0 * distance1 < fixed_zero)
 	{
 		// Find intersection point of edge and plane
-		float interp = distance0 / (distance0 - distance1);
+		fixed interp = distance0 / (distance0 - distance1);
 		vOut[count].v = vIn[0].v + interp * (vIn[1].v - vIn[0].v);
 
 		// VertexA is hitting edgeB.
@@ -254,5 +254,5 @@ bool b2TestOverlap(	const b2Shape* shapeA, int32 indexA,
 
 	b2Distance(&output, &cache, &input);
 
-	return output.distance < 10.0f * b2_epsilon;
+	return output.distance < fixed_ten * b2_epsilon;
 }

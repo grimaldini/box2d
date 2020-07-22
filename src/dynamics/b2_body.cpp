@@ -34,8 +34,8 @@ b2Body::b2Body(const b2BodyDef* bd, b2World* world)
 	b2Assert(bd->linearVelocity.IsValid());
 	b2Assert(b2IsValid(bd->angle));
 	b2Assert(b2IsValid(bd->angularVelocity));
-	b2Assert(b2IsValid(bd->angularDamping) && bd->angularDamping >= 0.0f);
-	b2Assert(b2IsValid(bd->linearDamping) && bd->linearDamping >= 0.0f);
+	b2Assert(b2IsValid(bd->angularDamping) && bd->angularDamping >= fixed_zero);
+	b2Assert(b2IsValid(bd->linearDamping) && bd->linearDamping >= fixed_zero);
 
 	m_flags = 0;
 
@@ -70,7 +70,7 @@ b2Body::b2Body(const b2BodyDef* bd, b2World* world)
 	m_sweep.c = m_xf.p;
 	m_sweep.a0 = bd->angle;
 	m_sweep.a = bd->angle;
-	m_sweep.alpha0 = 0.0f;
+	m_sweep.alpha0 = fixed_zero;
 
 	m_jointList = nullptr;
 	m_contactList = nullptr;
@@ -85,17 +85,17 @@ b2Body::b2Body(const b2BodyDef* bd, b2World* world)
 	m_gravityScale = bd->gravityScale;
 
 	m_force.SetZero();
-	m_torque = 0.0f;
+	m_torque = fixed_zero;
 
-	m_sleepTime = 0.0f;
+	m_sleepTime = fixed_zero;
 
 	m_type = bd->type;
 
-	m_mass = 0.0f;
-	m_invMass = 0.0f;
+	m_mass = fixed_zero;
+	m_invMass = fixed_zero;
 
-	m_I = 0.0f;
-	m_invI = 0.0f;
+	m_I = fixed_zero;
+	m_invI = fixed_zero;
 
 	m_userData = bd->userData;
 
@@ -128,7 +128,7 @@ void b2Body::SetType(b2BodyType type)
 	if (m_type == b2_staticBody)
 	{
 		m_linearVelocity.SetZero();
-		m_angularVelocity = 0.0f;
+		m_angularVelocity = fixed_zero;
 		m_sweep.a0 = m_sweep.a;
 		m_sweep.c0 = m_sweep.c;
 		m_flags &= ~e_awakeFlag;
@@ -138,7 +138,7 @@ void b2Body::SetType(b2BodyType type)
 	SetAwake(true);
 
 	m_force.SetZero();
-	m_torque = 0.0f;
+	m_torque = fixed_zero;
 
 	// Delete the attached contacts.
 	b2ContactEdge* ce = m_contactList;
@@ -189,7 +189,7 @@ b2Fixture* b2Body::CreateFixture(const b2FixtureDef* def)
 	fixture->m_body = this;
 
 	// Adjust mass properties if needed.
-	if (fixture->m_density > 0.0f)
+	if (fixture->m_density > fixed_zero)
 	{
 		ResetMassData();
 	}
@@ -201,7 +201,7 @@ b2Fixture* b2Body::CreateFixture(const b2FixtureDef* def)
 	return fixture;
 }
 
-b2Fixture* b2Body::CreateFixture(const b2Shape* shape, float density)
+b2Fixture* b2Body::CreateFixture(const b2Shape* shape, fixed density)
 {
 	b2FixtureDef def;
 	def.shape = shape;
@@ -285,10 +285,10 @@ void b2Body::DestroyFixture(b2Fixture* fixture)
 void b2Body::ResetMassData()
 {
 	// Compute mass data from shapes. Each shape has its own density.
-	m_mass = 0.0f;
-	m_invMass = 0.0f;
-	m_I = 0.0f;
-	m_invI = 0.0f;
+	m_mass = fixed_zero;
+	m_invMass = fixed_zero;
+	m_I = fixed_zero;
+	m_invI = fixed_zero;
 	m_sweep.localCenter.SetZero();
 
 	// Static and kinematic bodies have zero mass.
@@ -306,7 +306,7 @@ void b2Body::ResetMassData()
 	b2Vec2 localCenter = b2Vec2_zero;
 	for (b2Fixture* f = m_fixtureList; f; f = f->m_next)
 	{
-		if (f->m_density == 0.0f)
+		if (f->m_density == fixed_zero)
 		{
 			continue;
 		}
@@ -319,24 +319,24 @@ void b2Body::ResetMassData()
 	}
 
 	// Compute center of mass.
-	if (m_mass > 0.0f)
+	if (m_mass > fixed_zero)
 	{
-		m_invMass = 1.0f / m_mass;
+		m_invMass = fixed_one / m_mass;
 		localCenter *= m_invMass;
 	}
 
-	if (m_I > 0.0f && (m_flags & e_fixedRotationFlag) == 0)
+	if (m_I > fixed_zero && (m_flags & e_fixedRotationFlag) == 0)
 	{
 		// Center the inertia about the center of mass.
 		m_I -= m_mass * b2Dot(localCenter, localCenter);
-		b2Assert(m_I > 0.0f);
-		m_invI = 1.0f / m_I;
+		b2Assert(m_I > fixed_zero);
+		m_invI = fixed_one / m_I;
 
 	}
 	else
 	{
-		m_I = 0.0f;
-		m_invI = 0.0f;
+		m_I = fixed_zero;
+		m_invI = fixed_zero;
 	}
 
 	// Move center of mass.
@@ -361,23 +361,23 @@ void b2Body::SetMassData(const b2MassData* massData)
 		return;
 	}
 
-	m_invMass = 0.0f;
-	m_I = 0.0f;
-	m_invI = 0.0f;
+	m_invMass = fixed_zero;
+	m_I = fixed_zero;
+	m_invI = fixed_zero;
 
 	m_mass = massData->mass;
-	if (m_mass <= 0.0f)
+	if (m_mass <= fixed_zero)
 	{
-		m_mass = 1.0f;
+		m_mass = fixed_one;
 	}
 
-	m_invMass = 1.0f / m_mass;
+	m_invMass = fixed_one / m_mass;
 
-	if (massData->I > 0.0f && (m_flags & b2Body::e_fixedRotationFlag) == 0)
+	if (massData->I > fixed_zero && (m_flags & b2Body::e_fixedRotationFlag) == 0)
 	{
 		m_I = massData->I - m_mass * b2Dot(massData->center, massData->center);
-		b2Assert(m_I > 0.0f);
-		m_invI = 1.0f / m_I;
+		b2Assert(m_I > fixed_zero);
+		m_invI = fixed_one / m_I;
 	}
 
 	// Move center of mass.
@@ -412,7 +412,7 @@ bool b2Body::ShouldCollide(const b2Body* other) const
 	return true;
 }
 
-void b2Body::SetTransform(const b2Vec2& position, float angle)
+void b2Body::SetTransform(const b2Vec2& position, fixed angle)
 {
 	b2Assert(m_world->IsLocked() == false);
 	if (m_world->IsLocked() == true)
@@ -523,7 +523,7 @@ void b2Body::SetFixedRotation(bool flag)
 		m_flags &= ~e_fixedRotationFlag;
 	}
 
-	m_angularVelocity = 0.0f;
+	m_angularVelocity = fixed_zero;
 
 	ResetMassData();
 }

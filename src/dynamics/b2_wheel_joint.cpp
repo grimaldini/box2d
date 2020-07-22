@@ -56,18 +56,18 @@ b2WheelJoint::b2WheelJoint(const b2WheelJointDef* def)
 	m_localAnchorA = def->localAnchorA;
 	m_localAnchorB = def->localAnchorB;
 	m_localXAxisA = def->localAxisA;
-	m_localYAxisA = b2Cross(1.0f, m_localXAxisA);
+	m_localYAxisA = b2Cross(fixed_one, m_localXAxisA);
 
-	m_mass = 0.0f;
-	m_impulse = 0.0f;
-	m_motorMass = 0.0f;
-	m_motorImpulse = 0.0f;
-	m_springMass = 0.0f;
-	m_springImpulse = 0.0f;
+	m_mass = fixed_zero;
+	m_impulse = fixed_zero;
+	m_motorMass = fixed_zero;
+	m_motorImpulse = fixed_zero;
+	m_springMass = fixed_zero;
+	m_springImpulse = fixed_zero;
 
-	m_axialMass = 0.0f;
-	m_lowerImpulse = 0.0f;
-	m_upperImpulse = 0.0f;
+	m_axialMass = fixed_zero;
+	m_lowerImpulse = fixed_zero;
+	m_upperImpulse = fixed_zero;
 	m_lowerTranslation = def->lowerTranslation;
 	m_upperTranslation = def->upperTranslation;
 	m_enableLimit = def->enableLimit;
@@ -76,8 +76,8 @@ b2WheelJoint::b2WheelJoint(const b2WheelJointDef* def)
 	m_motorSpeed = def->motorSpeed;
 	m_enableMotor = def->enableMotor;
 
-	m_bias = 0.0f;
-	m_gamma = 0.0f;
+	m_bias = fixed_zero;
+	m_gamma = fixed_zero;
 
 	m_ax.SetZero();
 	m_ay.SetZero();
@@ -97,18 +97,18 @@ void b2WheelJoint::InitVelocityConstraints(const b2SolverData& data)
 	m_invIA = m_bodyA->m_invI;
 	m_invIB = m_bodyB->m_invI;
 
-	float mA = m_invMassA, mB = m_invMassB;
-	float iA = m_invIA, iB = m_invIB;
+	fixed mA = m_invMassA, mB = m_invMassB;
+	fixed iA = m_invIA, iB = m_invIB;
 
 	b2Vec2 cA = data.positions[m_indexA].c;
-	float aA = data.positions[m_indexA].a;
+	fixed aA = data.positions[m_indexA].a;
 	b2Vec2 vA = data.velocities[m_indexA].v;
-	float wA = data.velocities[m_indexA].w;
+	fixed wA = data.velocities[m_indexA].w;
 
 	b2Vec2 cB = data.positions[m_indexB].c;
-	float aB = data.positions[m_indexB].a;
+	fixed aB = data.positions[m_indexB].a;
 	b2Vec2 vB = data.velocities[m_indexB].v;
-	float wB = data.velocities[m_indexB].w;
+	fixed wB = data.velocities[m_indexB].w;
 
 	b2Rot qA(aA), qB(aB);
 
@@ -125,9 +125,9 @@ void b2WheelJoint::InitVelocityConstraints(const b2SolverData& data)
 
 		m_mass = mA + mB + iA * m_sAy * m_sAy + iB * m_sBy * m_sBy;
 
-		if (m_mass > 0.0f)
+		if (m_mass > fixed_zero)
 		{
-			m_mass = 1.0f / m_mass;
+			m_mass = fixed_one / m_mass;
 		}
 	}
 
@@ -136,45 +136,45 @@ void b2WheelJoint::InitVelocityConstraints(const b2SolverData& data)
 	m_sAx = b2Cross(d + rA, m_ax);
 	m_sBx = b2Cross(rB, m_ax);
 
-	const float invMass = mA + mB + iA * m_sAx * m_sAx + iB * m_sBx * m_sBx;
-	if (invMass > 0.0f)
+	const fixed invMass = mA + mB + iA * m_sAx * m_sAx + iB * m_sBx * m_sBx;
+	if (invMass > fixed_zero)
 	{
-		m_axialMass = 1.0f / invMass;
+		m_axialMass = fixed_one / invMass;
 	}
 	else
 	{
-		m_axialMass = 0.0f;
+		m_axialMass = fixed_zero;
 	}
 
-	m_springMass = 0.0f;
-	m_bias = 0.0f;
-	m_gamma = 0.0f;
+	m_springMass = fixed_zero;
+	m_bias = fixed_zero;
+	m_gamma = fixed_zero;
 
-	if (m_stiffness > 0.0f && invMass > 0.0f)
+	if (m_stiffness > fixed_zero && invMass > fixed_zero)
 	{
-		m_springMass = 1.0f / invMass;
+		m_springMass = fixed_one / invMass;
 
-		float C = b2Dot(d, m_ax);
+		fixed C = b2Dot(d, m_ax);
 
 		// magic formulas
-		float h = data.step.dt;
+		fixed h = data.step.dt;
 		m_gamma = h * (m_damping + h * m_stiffness);
-		if (m_gamma > 0.0f)
+		if (m_gamma > fixed_zero)
 		{
-			m_gamma = 1.0f / m_gamma;
+			m_gamma = fixed_one / m_gamma;
 		}
 
 		m_bias = C * h * m_stiffness * m_gamma;
 
 		m_springMass = invMass + m_gamma;
-		if (m_springMass > 0.0f)
+		if (m_springMass > fixed_zero)
 		{
-			m_springMass = 1.0f / m_springMass;
+			m_springMass = fixed_one / m_springMass;
 		}
 	}
 	else
 	{
-		m_springImpulse = 0.0f;
+		m_springImpulse = fixed_zero;
 	}
 
 	if (m_enableLimit)
@@ -183,22 +183,22 @@ void b2WheelJoint::InitVelocityConstraints(const b2SolverData& data)
 	}
 	else
 	{
-		m_lowerImpulse = 0.0f;
-		m_upperImpulse = 0.0f;
+		m_lowerImpulse = fixed_zero;
+		m_upperImpulse = fixed_zero;
 	}
 
 	if (m_enableMotor)
 	{
 		m_motorMass = iA + iB;
-		if (m_motorMass > 0.0f)
+		if (m_motorMass > fixed_zero)
 		{
-			m_motorMass = 1.0f / m_motorMass;
+			m_motorMass = fixed_one / m_motorMass;
 		}
 	}
 	else
 	{
-		m_motorMass = 0.0f;
-		m_motorImpulse = 0.0f;
+		m_motorMass = fixed_zero;
+		m_motorImpulse = fixed_zero;
 	}
 
 	if (data.step.warmStarting)
@@ -208,10 +208,10 @@ void b2WheelJoint::InitVelocityConstraints(const b2SolverData& data)
 		m_springImpulse *= data.step.dtRatio;
 		m_motorImpulse *= data.step.dtRatio;
 
-		float axialImpulse = m_springImpulse + m_lowerImpulse - m_upperImpulse;
+		fixed axialImpulse = m_springImpulse + m_lowerImpulse - m_upperImpulse;
 		b2Vec2 P = m_impulse * m_ay + axialImpulse * m_ax;
-		float LA = m_impulse * m_sAy + axialImpulse * m_sAx + m_motorImpulse;
-		float LB = m_impulse * m_sBy + axialImpulse * m_sBx + m_motorImpulse;
+		fixed LA = m_impulse * m_sAy + axialImpulse * m_sAx + m_motorImpulse;
+		fixed LB = m_impulse * m_sBy + axialImpulse * m_sBx + m_motorImpulse;
 
 		vA -= m_invMassA * P;
 		wA -= m_invIA * LA;
@@ -221,11 +221,11 @@ void b2WheelJoint::InitVelocityConstraints(const b2SolverData& data)
 	}
 	else
 	{
-		m_impulse = 0.0f;
-		m_springImpulse = 0.0f;
-		m_motorImpulse = 0.0f;
-		m_lowerImpulse = 0.0f;
-		m_upperImpulse = 0.0f;
+		m_impulse = fixed_zero;
+		m_springImpulse = fixed_zero;
+		m_motorImpulse = fixed_zero;
+		m_lowerImpulse = fixed_zero;
+		m_upperImpulse = fixed_zero;
 	}
 
 	data.velocities[m_indexA].v = vA;
@@ -236,23 +236,23 @@ void b2WheelJoint::InitVelocityConstraints(const b2SolverData& data)
 
 void b2WheelJoint::SolveVelocityConstraints(const b2SolverData& data)
 {
-	float mA = m_invMassA, mB = m_invMassB;
-	float iA = m_invIA, iB = m_invIB;
+	fixed mA = m_invMassA, mB = m_invMassB;
+	fixed iA = m_invIA, iB = m_invIB;
 
 	b2Vec2 vA = data.velocities[m_indexA].v;
-	float wA = data.velocities[m_indexA].w;
+	fixed wA = data.velocities[m_indexA].w;
 	b2Vec2 vB = data.velocities[m_indexB].v;
-	float wB = data.velocities[m_indexB].w;
+	fixed wB = data.velocities[m_indexB].w;
 
 	// Solve spring constraint
 	{
-		float Cdot = b2Dot(m_ax, vB - vA) + m_sBx * wB - m_sAx * wA;
-		float impulse = -m_springMass * (Cdot + m_bias + m_gamma * m_springImpulse);
+		fixed Cdot = b2Dot(m_ax, vB - vA) + m_sBx * wB - m_sAx * wA;
+		fixed impulse = -m_springMass * (Cdot + m_bias + m_gamma * m_springImpulse);
 		m_springImpulse += impulse;
 
 		b2Vec2 P = impulse * m_ax;
-		float LA = impulse * m_sAx;
-		float LB = impulse * m_sBx;
+		fixed LA = impulse * m_sAx;
+		fixed LB = impulse * m_sBx;
 
 		vA -= mA * P;
 		wA -= iA * LA;
@@ -263,11 +263,11 @@ void b2WheelJoint::SolveVelocityConstraints(const b2SolverData& data)
 
 	// Solve rotational motor constraint
 	{
-		float Cdot = wB - wA - m_motorSpeed;
-		float impulse = -m_motorMass * Cdot;
+		fixed Cdot = wB - wA - m_motorSpeed;
+		fixed impulse = -m_motorMass * Cdot;
 
-		float oldImpulse = m_motorImpulse;
-		float maxImpulse = data.step.dt * m_maxMotorTorque;
+		fixed oldImpulse = m_motorImpulse;
+		fixed maxImpulse = data.step.dt * m_maxMotorTorque;
 		m_motorImpulse = b2Clamp(m_motorImpulse + impulse, -maxImpulse, maxImpulse);
 		impulse = m_motorImpulse - oldImpulse;
 
@@ -279,16 +279,16 @@ void b2WheelJoint::SolveVelocityConstraints(const b2SolverData& data)
 	{
 		// Lower limit
 		{
-			float C = m_translation - m_lowerTranslation;
-			float Cdot = b2Dot(m_ax, vB - vA) + m_sBx * wB - m_sAx * wA;
-			float impulse = -m_axialMass * (Cdot + b2Max(C, 0.0f) * data.step.inv_dt);
-			float oldImpulse = m_lowerImpulse;
-			m_lowerImpulse = b2Max(m_lowerImpulse + impulse, 0.0f);
+			fixed C = m_translation - m_lowerTranslation;
+			fixed Cdot = b2Dot(m_ax, vB - vA) + m_sBx * wB - m_sAx * wA;
+			fixed impulse = -m_axialMass * (Cdot + b2Max(C, fixed_zero) * data.step.inv_dt);
+			fixed oldImpulse = m_lowerImpulse;
+			m_lowerImpulse = b2Max(m_lowerImpulse + impulse, fixed_zero);
 			impulse = m_lowerImpulse - oldImpulse;
 
 			b2Vec2 P = impulse * m_ax;
-			float LA = impulse * m_sAx;
-			float LB = impulse * m_sBx;
+			fixed LA = impulse * m_sAx;
+			fixed LB = impulse * m_sBx;
 
 			vA -= mA * P;
 			wA -= iA * LA;
@@ -300,16 +300,16 @@ void b2WheelJoint::SolveVelocityConstraints(const b2SolverData& data)
 		// Note: signs are flipped to keep C positive when the constraint is satisfied.
 		// This also keeps the impulse positive when the limit is active.
 		{
-			float C = m_upperTranslation - m_translation;
-			float Cdot = b2Dot(m_ax, vA - vB) + m_sAx * wA - m_sBx * wB;
-			float impulse = -m_axialMass * (Cdot + b2Max(C, 0.0f) * data.step.inv_dt);
-			float oldImpulse = m_upperImpulse;
-			m_upperImpulse = b2Max(m_upperImpulse + impulse, 0.0f);
+			fixed C = m_upperTranslation - m_translation;
+			fixed Cdot = b2Dot(m_ax, vA - vB) + m_sAx * wA - m_sBx * wB;
+			fixed impulse = -m_axialMass * (Cdot + b2Max(C, fixed_zero) * data.step.inv_dt);
+			fixed oldImpulse = m_upperImpulse;
+			m_upperImpulse = b2Max(m_upperImpulse + impulse, fixed_zero);
 			impulse = m_upperImpulse - oldImpulse;
 
 			b2Vec2 P = impulse * m_ax;
-			float LA = impulse * m_sAx;
-			float LB = impulse * m_sBx;
+			fixed LA = impulse * m_sAx;
+			fixed LB = impulse * m_sBx;
 
 			vA += mA * P;
 			wA += iA * LA;
@@ -320,13 +320,13 @@ void b2WheelJoint::SolveVelocityConstraints(const b2SolverData& data)
 
 	// Solve point to line constraint
 	{
-		float Cdot = b2Dot(m_ay, vB - vA) + m_sBy * wB - m_sAy * wA;
-		float impulse = -m_mass * Cdot;
+		fixed Cdot = b2Dot(m_ay, vB - vA) + m_sBy * wB - m_sAy * wA;
+		fixed impulse = -m_mass * Cdot;
 		m_impulse += impulse;
 
 		b2Vec2 P = impulse * m_ay;
-		float LA = impulse * m_sAy;
-		float LB = impulse * m_sBy;
+		fixed LA = impulse * m_sAy;
+		fixed LB = impulse * m_sBy;
 
 		vA -= mA * P;
 		wA -= iA * LA;
@@ -344,11 +344,11 @@ void b2WheelJoint::SolveVelocityConstraints(const b2SolverData& data)
 bool b2WheelJoint::SolvePositionConstraints(const b2SolverData& data)
 {
 	b2Vec2 cA = data.positions[m_indexA].c;
-	float aA = data.positions[m_indexA].a;
+	fixed aA = data.positions[m_indexA].a;
 	b2Vec2 cB = data.positions[m_indexB].c;
-	float aB = data.positions[m_indexB].a;
+	fixed aB = data.positions[m_indexB].a;
 
-	float linearError = 0.0f;
+	fixed linearError = fixed_zero;
 
 	if (m_enableLimit)
 	{
@@ -359,37 +359,37 @@ bool b2WheelJoint::SolvePositionConstraints(const b2SolverData& data)
 		b2Vec2 d = (cB - cA) + rB - rA;
 
 		b2Vec2 ax = b2Mul(qA, m_localXAxisA);
-		float sAx = b2Cross(d + rA, m_ax);
-		float sBx = b2Cross(rB, m_ax);
+		fixed sAx = b2Cross(d + rA, m_ax);
+		fixed sBx = b2Cross(rB, m_ax);
 
-		float C = 0.0f;
-		float translation = b2Dot(ax, d);
-		if (b2Abs(m_upperTranslation - m_lowerTranslation) < 2.0f * b2_linearSlop)
+		fixed C = fixed_zero;
+		fixed translation = b2Dot(ax, d);
+		if (b2Abs(m_upperTranslation - m_lowerTranslation) < fixed_two * b2_linearSlop)
 		{
 			C = translation;
 		}
 		else if (translation <= m_lowerTranslation)
 		{
-			C = b2Min(translation - m_lowerTranslation, 0.0f);
+			C = b2Min(translation - m_lowerTranslation, fixed_zero);
 		}
 		else if (translation >= m_upperTranslation)
 		{
-			C = b2Max(translation - m_upperTranslation, 0.0f);
+			C = b2Max(translation - m_upperTranslation, fixed_zero);
 		}
 
-		if (C != 0.0f)
+		if (C != fixed_zero)
 		{
 
-			float invMass = m_invMassA + m_invMassB + m_invIA * sAx * sAx + m_invIB * sBx * sBx;
-			float impulse = 0.0f;
-			if (invMass != 0.0f)
+			fixed invMass = m_invMassA + m_invMassB + m_invIA * sAx * sAx + m_invIB * sBx * sBx;
+			fixed impulse = fixed_zero;
+			if (invMass != fixed_zero)
 			{
 				impulse = -C / invMass;
 			}
 
 			b2Vec2 P = impulse * ax;
-			float LA = impulse * sAx;
-			float LB = impulse * sBx;
+			fixed LA = impulse * sAx;
+			fixed LB = impulse * sBx;
 
 			cA -= m_invMassA * P;
 			aA -= m_invIA * LA;
@@ -410,22 +410,22 @@ bool b2WheelJoint::SolvePositionConstraints(const b2SolverData& data)
 
 		b2Vec2 ay = b2Mul(qA, m_localYAxisA);
 
-		float sAy = b2Cross(d + rA, ay);
-		float sBy = b2Cross(rB, ay);
+		fixed sAy = b2Cross(d + rA, ay);
+		fixed sBy = b2Cross(rB, ay);
 
-		float C = b2Dot(d, ay);
+		fixed C = b2Dot(d, ay);
 
-		float invMass = m_invMassA + m_invMassB + m_invIA * m_sAy * m_sAy + m_invIB * m_sBy * m_sBy;
+		fixed invMass = m_invMassA + m_invMassB + m_invIA * m_sAy * m_sAy + m_invIB * m_sBy * m_sBy;
 
-		float impulse = 0.0f;
-		if (invMass != 0.0f)
+		fixed impulse = fixed_zero;
+		if (invMass != fixed_zero)
 		{
 			impulse = - C / invMass;
 		}
 
 		b2Vec2 P = impulse * ay;
-		float LA = impulse * sAy;
-		float LB = impulse * sBy;
+		fixed LA = impulse * sAy;
+		fixed LB = impulse * sBy;
 
 		cA -= m_invMassA * P;
 		aA -= m_invIA * LA;
@@ -453,17 +453,17 @@ b2Vec2 b2WheelJoint::GetAnchorB() const
 	return m_bodyB->GetWorldPoint(m_localAnchorB);
 }
 
-b2Vec2 b2WheelJoint::GetReactionForce(float inv_dt) const
+b2Vec2 b2WheelJoint::GetReactionForce(fixed inv_dt) const
 {
 	return inv_dt * (m_impulse * m_ay + m_springImpulse * m_ax);
 }
 
-float b2WheelJoint::GetReactionTorque(float inv_dt) const
+fixed b2WheelJoint::GetReactionTorque(fixed inv_dt) const
 {
 	return inv_dt * m_motorImpulse;
 }
 
-float b2WheelJoint::GetJointTranslation() const
+fixed b2WheelJoint::GetJointTranslation() const
 {
 	b2Body* bA = m_bodyA;
 	b2Body* bB = m_bodyB;
@@ -473,11 +473,11 @@ float b2WheelJoint::GetJointTranslation() const
 	b2Vec2 d = pB - pA;
 	b2Vec2 axis = bA->GetWorldVector(m_localXAxisA);
 
-	float translation = b2Dot(d, axis);
+	fixed translation = b2Dot(d, axis);
 	return translation;
 }
 
-float b2WheelJoint::GetJointLinearSpeed() const
+fixed b2WheelJoint::GetJointLinearSpeed() const
 {
 	b2Body* bA = m_bodyA;
 	b2Body* bB = m_bodyB;
@@ -491,24 +491,24 @@ float b2WheelJoint::GetJointLinearSpeed() const
 
 	b2Vec2 vA = bA->m_linearVelocity;
 	b2Vec2 vB = bB->m_linearVelocity;
-	float wA = bA->m_angularVelocity;
-	float wB = bB->m_angularVelocity;
+	fixed wA = bA->m_angularVelocity;
+	fixed wB = bB->m_angularVelocity;
 
-	float speed = b2Dot(d, b2Cross(wA, axis)) + b2Dot(axis, vB + b2Cross(wB, rB) - vA - b2Cross(wA, rA));
+	fixed speed = b2Dot(d, b2Cross(wA, axis)) + b2Dot(axis, vB + b2Cross(wB, rB) - vA - b2Cross(wA, rA));
 	return speed;
 }
 
-float b2WheelJoint::GetJointAngle() const
+fixed b2WheelJoint::GetJointAngle() const
 {
 	b2Body* bA = m_bodyA;
 	b2Body* bB = m_bodyB;
 	return bB->m_sweep.a - bA->m_sweep.a;
 }
 
-float b2WheelJoint::GetJointAngularSpeed() const
+fixed b2WheelJoint::GetJointAngularSpeed() const
 {
-	float wA = m_bodyA->m_angularVelocity;
-	float wB = m_bodyB->m_angularVelocity;
+	fixed wA = m_bodyA->m_angularVelocity;
+	fixed wB = m_bodyB->m_angularVelocity;
 	return wB - wA;
 }
 
@@ -524,22 +524,22 @@ void b2WheelJoint::EnableLimit(bool flag)
 		m_bodyA->SetAwake(true);
 		m_bodyB->SetAwake(true);
 		m_enableLimit = flag;
-		m_lowerImpulse = 0.0f;
-		m_upperImpulse = 0.0f;
+		m_lowerImpulse = fixed_zero;
+		m_upperImpulse = fixed_zero;
 	}
 }
 
-float b2WheelJoint::GetLowerLimit() const
+fixed b2WheelJoint::GetLowerLimit() const
 {
 	return m_lowerTranslation;
 }
 
-float b2WheelJoint::GetUpperLimit() const
+fixed b2WheelJoint::GetUpperLimit() const
 {
 	return m_upperTranslation;
 }
 
-void b2WheelJoint::SetLimits(float lower, float upper)
+void b2WheelJoint::SetLimits(fixed lower, fixed upper)
 {
 	b2Assert(lower <= upper);
 	if (lower != m_lowerTranslation || upper != m_upperTranslation)
@@ -548,8 +548,8 @@ void b2WheelJoint::SetLimits(float lower, float upper)
 		m_bodyB->SetAwake(true);
 		m_lowerTranslation = lower;
 		m_upperTranslation = upper;
-		m_lowerImpulse = 0.0f;
-		m_upperImpulse = 0.0f;
+		m_lowerImpulse = fixed_zero;
+		m_upperImpulse = fixed_zero;
 	}
 }
 
@@ -568,7 +568,7 @@ void b2WheelJoint::EnableMotor(bool flag)
 	}
 }
 
-void b2WheelJoint::SetMotorSpeed(float speed)
+void b2WheelJoint::SetMotorSpeed(fixed speed)
 {
 	if (speed != m_motorSpeed)
 	{
@@ -578,7 +578,7 @@ void b2WheelJoint::SetMotorSpeed(float speed)
 	}
 }
 
-void b2WheelJoint::SetMaxMotorTorque(float torque)
+void b2WheelJoint::SetMaxMotorTorque(fixed torque)
 {
 	if (torque != m_maxMotorTorque)
 	{
@@ -588,27 +588,27 @@ void b2WheelJoint::SetMaxMotorTorque(float torque)
 	}
 }
 
-float b2WheelJoint::GetMotorTorque(float inv_dt) const
+fixed b2WheelJoint::GetMotorTorque(fixed inv_dt) const
 {
 	return inv_dt * m_motorImpulse;
 }
 
-void b2WheelJoint::SetStiffness(float stiffness)
+void b2WheelJoint::SetStiffness(fixed stiffness)
 {
 	m_stiffness = stiffness;
 }
 
-float b2WheelJoint::GetStiffness() const
+fixed b2WheelJoint::GetStiffness() const
 {
 	return m_stiffness;
 }
 
-void b2WheelJoint::SetDamping(float damping)
+void b2WheelJoint::SetDamping(fixed damping)
 {
 	m_damping = damping;
 }
 
-float b2WheelJoint::GetDamping() const
+fixed b2WheelJoint::GetDamping() const
 {
 	return m_damping;
 }
@@ -645,11 +645,11 @@ void b2WheelJoint::Draw(b2Draw* draw) const
 
 	b2Vec2 axis = b2Mul(xfA.q, m_localXAxisA);
 
-	b2Color c1(0.7f, 0.7f, 0.7f);
-	b2Color c2(0.3f, 0.9f, 0.3f);
-	b2Color c3(0.9f, 0.3f, 0.3f);
-	b2Color c4(0.3f, 0.3f, 0.9f);
-	b2Color c5(0.4f, 0.4f, 0.4f);
+	b2Color c1(fixed(7, 10), fixed(7, 10), fixed(7, 10));
+	b2Color c2(fixed(3, 10), fixed(9, 10), fixed(3, 10));
+	b2Color c3(fixed(9, 10), fixed(3, 10), fixed(3, 10));
+	b2Color c4(fixed(3, 10), fixed(3, 10), fixed(9, 10));
+	b2Color c5(fixed(4, 10), fixed(4, 10), fixed(4, 10));
 
 	draw->DrawSegment(pA, pB, c5);
 
@@ -659,14 +659,14 @@ void b2WheelJoint::Draw(b2Draw* draw) const
 		b2Vec2 upper = pA + m_upperTranslation * axis;
 		b2Vec2 perp = b2Mul(xfA.q, m_localYAxisA);
 		draw->DrawSegment(lower, upper, c1);
-		draw->DrawSegment(lower - 0.5f * perp, lower + 0.5f * perp, c2);
-		draw->DrawSegment(upper - 0.5f * perp, upper + 0.5f * perp, c3);
+		draw->DrawSegment(lower - fixed_half * perp, lower + fixed_half * perp, c2);
+		draw->DrawSegment(upper - fixed_half * perp, upper + fixed_half * perp, c3);
 	}
 	else
 	{
-		draw->DrawSegment(pA - 1.0f * axis, pA + 1.0f * axis, c1);
+		draw->DrawSegment(pA - fixed_one * axis, pA + fixed_one * axis, c1);
 	}
 
-	draw->DrawPoint(pA, 5.0f, c1);
-	draw->DrawPoint(pB, 5.0f, c4);
+	draw->DrawPoint(pA, fixed_five, c1);
+	draw->DrawPoint(pB, fixed_five, c4);
 }

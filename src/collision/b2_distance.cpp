@@ -86,7 +86,7 @@ void b2DistanceProxy::Set(const b2Shape* shape, int32 index)
 	}
 }
 
-void b2DistanceProxy::Set(const b2Vec2* vertices, int32 count, float radius)
+void b2DistanceProxy::Set(const b2Vec2* vertices, int32 count, fixed radius)
 {
     m_vertices = vertices;
     m_count = count;
@@ -98,7 +98,7 @@ struct b2SimplexVertex
 	b2Vec2 wA;		// support point in proxyA
 	b2Vec2 wB;		// support point in proxyB
 	b2Vec2 w;		// wB - wA
-	float a;		// barycentric coordinate for closest point
+	fixed a;		// barycentric coordinate for closest point
 	int32 indexA;	// wA index
 	int32 indexB;	// wB index
 };
@@ -124,16 +124,16 @@ struct b2Simplex
 			v->wA = b2Mul(transformA, wALocal);
 			v->wB = b2Mul(transformB, wBLocal);
 			v->w = v->wB - v->wA;
-			v->a = 0.0f;
+			v->a = fixed_zero;
 		}
 
 		// Compute the new simplex metric, if it is substantially different than
 		// old metric then flush the simplex.
 		if (m_count > 1)
 		{
-			float metric1 = cache->metric;
-			float metric2 = GetMetric();
-			if (metric2 < 0.5f * metric1 || 2.0f * metric1 < metric2 || metric2 < b2_epsilon)
+			fixed metric1 = cache->metric;
+			fixed metric2 = GetMetric();
+			if (metric2 < fixed_half * metric1 || fixed_two * metric1 < metric2 || metric2 < b2_epsilon)
 			{
 				// Reset the simplex.
 				m_count = 0;
@@ -151,7 +151,7 @@ struct b2Simplex
 			v->wA = b2Mul(transformA, wALocal);
 			v->wB = b2Mul(transformB, wBLocal);
 			v->w = v->wB - v->wA;
-			v->a = 1.0f;
+			v->a = fixed_one;
 			m_count = 1;
 		}
 	}
@@ -178,16 +178,16 @@ struct b2Simplex
 		case 2:
 			{
 				b2Vec2 e12 = m_v2.w - m_v1.w;
-				float sgn = b2Cross(e12, -m_v1.w);
-				if (sgn > 0.0f)
+				fixed sgn = b2Cross(e12, -m_v1.w);
+				if (sgn > fixed_zero)
 				{
 					// Origin is left of e12.
-					return b2Cross(1.0f, e12);
+					return b2Cross(fixed_one, e12);
 				}
 				else
 				{
 					// Origin is right of e12.
-					return b2Cross(e12, 1.0f);
+					return b2Cross(e12, fixed_one);
 				}
 			}
 
@@ -249,16 +249,16 @@ struct b2Simplex
 		}
 	}
 
-	float GetMetric() const
+	fixed GetMetric() const
 	{
 		switch (m_count)
 		{
 		case 0:
 			b2Assert(false);
-			return 0.0f;
+			return fixed_zero;
 
 		case 1:
-			return 0.0f;
+			return fixed_zero;
 
 		case 2:
 			return b2Distance(m_v1.w, m_v2.w);
@@ -268,7 +268,7 @@ struct b2Simplex
 
 		default:
 			b2Assert(false);
-			return 0.0f;
+			return fixed_zero;
 		}
 	}
 
@@ -310,28 +310,28 @@ void b2Simplex::Solve2()
 	b2Vec2 e12 = w2 - w1;
 
 	// w1 region
-	float d12_2 = -b2Dot(w1, e12);
-	if (d12_2 <= 0.0f)
+	fixed d12_2 = -b2Dot(w1, e12);
+	if (d12_2 <= fixed_zero)
 	{
 		// a2 <= 0, so we clamp it to 0
-		m_v1.a = 1.0f;
+		m_v1.a = fixed_one;
 		m_count = 1;
 		return;
 	}
 
 	// w2 region
-	float d12_1 = b2Dot(w2, e12);
-	if (d12_1 <= 0.0f)
+	fixed d12_1 = b2Dot(w2, e12);
+	if (d12_1 <= fixed_zero)
 	{
 		// a1 <= 0, so we clamp it to 0
-		m_v2.a = 1.0f;
+		m_v2.a = fixed_one;
 		m_count = 1;
 		m_v1 = m_v2;
 		return;
 	}
 
 	// Must be in e12 region.
-	float inv_d12 = 1.0f / (d12_1 + d12_2);
+	fixed inv_d12 = fixed_one / (d12_1 + d12_2);
 	m_v1.a = d12_1 * inv_d12;
 	m_v2.a = d12_2 * inv_d12;
 	m_count = 2;
@@ -353,50 +353,50 @@ void b2Simplex::Solve3()
 	// [w1.e12 w2.e12][a2] = [0]
 	// a3 = 0
 	b2Vec2 e12 = w2 - w1;
-	float w1e12 = b2Dot(w1, e12);
-	float w2e12 = b2Dot(w2, e12);
-	float d12_1 = w2e12;
-	float d12_2 = -w1e12;
+	fixed w1e12 = b2Dot(w1, e12);
+	fixed w2e12 = b2Dot(w2, e12);
+	fixed d12_1 = w2e12;
+	fixed d12_2 = -w1e12;
 
 	// Edge13
 	// [1      1     ][a1] = [1]
 	// [w1.e13 w3.e13][a3] = [0]
 	// a2 = 0
 	b2Vec2 e13 = w3 - w1;
-	float w1e13 = b2Dot(w1, e13);
-	float w3e13 = b2Dot(w3, e13);
-	float d13_1 = w3e13;
-	float d13_2 = -w1e13;
+	fixed w1e13 = b2Dot(w1, e13);
+	fixed w3e13 = b2Dot(w3, e13);
+	fixed d13_1 = w3e13;
+	fixed d13_2 = -w1e13;
 
 	// Edge23
 	// [1      1     ][a2] = [1]
 	// [w2.e23 w3.e23][a3] = [0]
 	// a1 = 0
 	b2Vec2 e23 = w3 - w2;
-	float w2e23 = b2Dot(w2, e23);
-	float w3e23 = b2Dot(w3, e23);
-	float d23_1 = w3e23;
-	float d23_2 = -w2e23;
+	fixed w2e23 = b2Dot(w2, e23);
+	fixed w3e23 = b2Dot(w3, e23);
+	fixed d23_1 = w3e23;
+	fixed d23_2 = -w2e23;
 	
 	// Triangle123
-	float n123 = b2Cross(e12, e13);
+	fixed n123 = b2Cross(e12, e13);
 
-	float d123_1 = n123 * b2Cross(w2, w3);
-	float d123_2 = n123 * b2Cross(w3, w1);
-	float d123_3 = n123 * b2Cross(w1, w2);
+	fixed d123_1 = n123 * b2Cross(w2, w3);
+	fixed d123_2 = n123 * b2Cross(w3, w1);
+	fixed d123_3 = n123 * b2Cross(w1, w2);
 
 	// w1 region
-	if (d12_2 <= 0.0f && d13_2 <= 0.0f)
+	if (d12_2 <= fixed_zero && d13_2 <= fixed_zero)
 	{
-		m_v1.a = 1.0f;
+		m_v1.a = fixed_one;
 		m_count = 1;
 		return;
 	}
 
 	// e12
-	if (d12_1 > 0.0f && d12_2 > 0.0f && d123_3 <= 0.0f)
+	if (d12_1 > fixed_zero && d12_2 > fixed_zero && d123_3 <= fixed_zero)
 	{
-		float inv_d12 = 1.0f / (d12_1 + d12_2);
+		fixed inv_d12 = fixed_one / (d12_1 + d12_2);
 		m_v1.a = d12_1 * inv_d12;
 		m_v2.a = d12_2 * inv_d12;
 		m_count = 2;
@@ -404,9 +404,9 @@ void b2Simplex::Solve3()
 	}
 
 	// e13
-	if (d13_1 > 0.0f && d13_2 > 0.0f && d123_2 <= 0.0f)
+	if (d13_1 > fixed_zero && d13_2 > fixed_zero && d123_2 <= fixed_zero)
 	{
-		float inv_d13 = 1.0f / (d13_1 + d13_2);
+		fixed inv_d13 = fixed_one / (d13_1 + d13_2);
 		m_v1.a = d13_1 * inv_d13;
 		m_v3.a = d13_2 * inv_d13;
 		m_count = 2;
@@ -415,27 +415,27 @@ void b2Simplex::Solve3()
 	}
 
 	// w2 region
-	if (d12_1 <= 0.0f && d23_2 <= 0.0f)
+	if (d12_1 <= fixed_zero && d23_2 <= fixed_zero)
 	{
-		m_v2.a = 1.0f;
+		m_v2.a = fixed_one;
 		m_count = 1;
 		m_v1 = m_v2;
 		return;
 	}
 
 	// w3 region
-	if (d13_1 <= 0.0f && d23_1 <= 0.0f)
+	if (d13_1 <= fixed_zero && d23_1 <= fixed_zero)
 	{
-		m_v3.a = 1.0f;
+		m_v3.a = fixed_one;
 		m_count = 1;
 		m_v1 = m_v3;
 		return;
 	}
 
 	// e23
-	if (d23_1 > 0.0f && d23_2 > 0.0f && d123_1 <= 0.0f)
+	if (d23_1 > fixed_zero && d23_2 > fixed_zero && d123_1 <= fixed_zero)
 	{
-		float inv_d23 = 1.0f / (d23_1 + d23_2);
+		fixed inv_d23 = fixed_one / (d23_1 + d23_2);
 		m_v2.a = d23_1 * inv_d23;
 		m_v3.a = d23_2 * inv_d23;
 		m_count = 2;
@@ -444,7 +444,7 @@ void b2Simplex::Solve3()
 	}
 
 	// Must be in triangle123
-	float inv_d123 = 1.0f / (d123_1 + d123_2 + d123_3);
+	fixed inv_d123 = fixed_one / (d123_1 + d123_2 + d123_3);
 	m_v1.a = d123_1 * inv_d123;
 	m_v2.a = d123_2 * inv_d123;
 	m_v3.a = d123_3 * inv_d123;
@@ -572,8 +572,8 @@ void b2Distance(b2DistanceOutput* output,
 	// Apply radii if requested.
 	if (input->useRadii)
 	{
-		float rA = proxyA->m_radius;
-		float rB = proxyB->m_radius;
+		fixed rA = proxyA->m_radius;
+		fixed rB = proxyB->m_radius;
 
 		if (output->distance > rA + rB && output->distance > b2_epsilon)
 		{
@@ -589,10 +589,10 @@ void b2Distance(b2DistanceOutput* output,
 		{
 			// Shapes are overlapped when radii are considered.
 			// Move the witness points to the middle.
-			b2Vec2 p = 0.5f * (output->pointA + output->pointB);
+			b2Vec2 p = fixed_half * (output->pointA + output->pointB);
 			output->pointA = p;
 			output->pointB = p;
-			output->distance = 0.0f;
+			output->distance = fixed_zero;
 		}
 	}
 }
@@ -603,23 +603,23 @@ void b2Distance(b2DistanceOutput* output,
 bool b2ShapeCast(b2ShapeCastOutput * output, const b2ShapeCastInput * input)
 {
     output->iterations = 0;
-    output->lambda = 1.0f;
+    output->lambda = fixed_one;
     output->normal.SetZero();
     output->point.SetZero();
 
 	const b2DistanceProxy* proxyA = &input->proxyA;
 	const b2DistanceProxy* proxyB = &input->proxyB;
 
-    float radiusA = b2Max(proxyA->m_radius, b2_polygonRadius);
-    float radiusB = b2Max(proxyB->m_radius, b2_polygonRadius);
-    float radius = radiusA + radiusB;
+    fixed radiusA = b2Max(proxyA->m_radius, b2_polygonRadius);
+    fixed radiusB = b2Max(proxyB->m_radius, b2_polygonRadius);
+    fixed radius = radiusA + radiusB;
 
 	b2Transform xfA = input->transformA;
 	b2Transform xfB = input->transformB;
 
 	b2Vec2 r = input->translationB;
-	b2Vec2 n(0.0f, 0.0f);
-	float lambda = 0.0f;
+	b2Vec2 n(fixed_zero, fixed_zero);
+	fixed lambda = fixed_zero;
 
 	// Initial simplex
 	b2Simplex simplex;
@@ -636,8 +636,8 @@ bool b2ShapeCast(b2ShapeCastOutput * output, const b2ShapeCastInput * input)
     b2Vec2 v = wA - wB;
 
     // Sigma is the target distance between polygons
-    float sigma = b2Max(b2_polygonRadius, radius - b2_polygonRadius);
-	const float tolerance = 0.5f * b2_linearSlop;
+    fixed sigma = b2Max(b2_polygonRadius, radius - b2_polygonRadius);
+	const fixed tolerance = fixed_half * b2_linearSlop;
 
 	// Main iteration loop.
 	const int32 k_maxIters = 20;
@@ -659,17 +659,17 @@ bool b2ShapeCast(b2ShapeCastOutput * output, const b2ShapeCastInput * input)
         v.Normalize();
 
         // Intersect ray with plane
-		float vp = b2Dot(v, p);
-        float vr = b2Dot(v, r);
+        fixed vp = b2Dot(v, p);
+        fixed vr = b2Dot(v, r);
 		if (vp - sigma > lambda * vr)
 		{
-			if (vr <= 0.0f)
+			if (vr <= fixed_zero)
 			{
 				return false;
 			}
 
 			lambda = (vp - sigma) / vr;
-			if (lambda > 1.0f)
+			if (lambda > fixed_one)
 			{
 				return false;
 			}
@@ -688,7 +688,7 @@ bool b2ShapeCast(b2ShapeCastOutput * output, const b2ShapeCastInput * input)
 		vertex->indexB = indexA;
 		vertex->wB = wA;
 		vertex->w = vertex->wB - vertex->wA;
-		vertex->a = 1.0f;
+		vertex->a = fixed_one;
 		simplex.m_count += 1;
 
 		switch (simplex.m_count)
@@ -726,7 +726,7 @@ bool b2ShapeCast(b2ShapeCastOutput * output, const b2ShapeCastInput * input)
 	b2Vec2 pointA, pointB;
 	simplex.GetWitnessPoints(&pointB, &pointA);
 
-	if (v.LengthSquared() > 0.0f)
+	if (v.LengthSquared() > fixed_zero)
 	{
         n = -v;
 		n.Normalize();

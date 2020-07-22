@@ -25,7 +25,7 @@
 
 #include "b2_joint.h"
 
-const float b2_minPulleyLength = 2.0f;
+const fixed b2_minPulleyLength = fixed_two;
 
 /// Pulley joint definition. This requires two ground anchors,
 /// two dynamic body anchor points, and a pulley ratio.
@@ -34,13 +34,13 @@ struct b2PulleyJointDef : public b2JointDef
 	b2PulleyJointDef()
 	{
 		type = e_pulleyJoint;
-		groundAnchorA.Set(-1.0f, 1.0f);
-		groundAnchorB.Set(1.0f, 1.0f);
-		localAnchorA.Set(-1.0f, 0.0f);
-		localAnchorB.Set(1.0f, 0.0f);
-		lengthA = 0.0f;
-		lengthB = 0.0f;
-		ratio = 1.0f;
+		groundAnchorA.Set(-fixed_one, fixed_one);
+		groundAnchorB.Set(fixed_one, fixed_one);
+		localAnchorA.Set(-fixed_one, fixed_zero);
+		localAnchorB.Set(fixed_one, fixed_zero);
+		lengthA = fixed_zero;
+		lengthB = fixed_zero;
+		ratio = fixed_one;
 		collideConnected = true;
 	}
 
@@ -48,7 +48,7 @@ struct b2PulleyJointDef : public b2JointDef
 	void Initialize(b2Body* bodyA, b2Body* bodyB,
 					const b2Vec2& groundAnchorA, const b2Vec2& groundAnchorB,
 					const b2Vec2& anchorA, const b2Vec2& anchorB,
-					float ratio);
+					fixed ratio);
 
 	/// The first ground anchor in world coordinates. This point never moves.
 	b2Vec2 groundAnchorA;
@@ -63,13 +63,13 @@ struct b2PulleyJointDef : public b2JointDef
 	b2Vec2 localAnchorB;
 
 	/// The a reference length for the segment attached to bodyA.
-	float lengthA;
+	fixed lengthA;
 
 	/// The a reference length for the segment attached to bodyB.
-	float lengthB;
+	fixed lengthB;
 
 	/// The pulley ratio, used to simulate a block-and-tackle.
-	float ratio;
+	fixed ratio;
 };
 
 /// The pulley joint is connected to two bodies and two fixed ground points.
@@ -86,8 +86,8 @@ public:
 	b2Vec2 GetAnchorA() const override;
 	b2Vec2 GetAnchorB() const override;
 
-	b2Vec2 GetReactionForce(float inv_dt) const override;
-	float GetReactionTorque(float inv_dt) const override;
+	b2Vec2 GetReactionForce(fixed inv_dt) const override;
+	fixed GetReactionTorque(fixed inv_dt) const override;
 
 	/// Get the first ground anchor.
 	b2Vec2 GetGroundAnchorA() const;
@@ -96,19 +96,19 @@ public:
 	b2Vec2 GetGroundAnchorB() const;
 
 	/// Get the current length of the segment attached to bodyA.
-	float GetLengthA() const;
+	fixed GetLengthA() const;
 
 	/// Get the current length of the segment attached to bodyB.
-	float GetLengthB() const;
+	fixed GetLengthB() const;
 
 	/// Get the pulley ratio.
-	float GetRatio() const;
+	fixed GetRatio() const;
 
 	/// Get the current length of the segment attached to bodyA.
-	float GetCurrentLengthA() const;
+	fixed GetCurrentLengthA() const;
 
 	/// Get the current length of the segment attached to bodyB.
-	float GetCurrentLengthB() const;
+	fixed GetCurrentLengthB() const;
 
 	/// Dump joint to dmLog
 	void Dump() override;
@@ -127,15 +127,15 @@ protected:
 
 	b2Vec2 m_groundAnchorA;
 	b2Vec2 m_groundAnchorB;
-	float m_lengthA;
-	float m_lengthB;
+	fixed m_lengthA;
+	fixed m_lengthB;
 	
 	// Solver shared
 	b2Vec2 m_localAnchorA;
 	b2Vec2 m_localAnchorB;
-	float m_constant;
-	float m_ratio;
-	float m_impulse;
+	fixed m_constant;
+	fixed m_ratio;
+	fixed m_impulse;
 
 	// Solver temp
 	int32 m_indexA;
@@ -146,11 +146,11 @@ protected:
 	b2Vec2 m_rB;
 	b2Vec2 m_localCenterA;
 	b2Vec2 m_localCenterB;
-	float m_invMassA;
-	float m_invMassB;
-	float m_invIA;
-	float m_invIB;
-	float m_mass;
+	fixed m_invMassA;
+	fixed m_invMassB;
+	fixed m_invIA;
+	fixed m_invIB;
+	fixed m_mass;
 };
 
 #endif

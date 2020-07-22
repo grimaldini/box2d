@@ -39,7 +39,7 @@
 void b2PulleyJointDef::Initialize(b2Body* bA, b2Body* bB,
 				const b2Vec2& groundA, const b2Vec2& groundB,
 				const b2Vec2& anchorA, const b2Vec2& anchorB,
-				float r)
+				fixed r)
 {
 	bodyA = bA;
 	bodyB = bB;
@@ -66,12 +66,12 @@ b2PulleyJoint::b2PulleyJoint(const b2PulleyJointDef* def)
 	m_lengthA = def->lengthA;
 	m_lengthB = def->lengthB;
 
-	b2Assert(def->ratio != 0.0f);
+	b2Assert(def->ratio != fixed_zero);
 	m_ratio = def->ratio;
 
 	m_constant = def->lengthA + m_ratio * def->lengthB;
 
-	m_impulse = 0.0f;
+	m_impulse = fixed_zero;
 }
 
 void b2PulleyJoint::InitVelocityConstraints(const b2SolverData& data)
@@ -86,14 +86,14 @@ void b2PulleyJoint::InitVelocityConstraints(const b2SolverData& data)
 	m_invIB = m_bodyB->m_invI;
 
 	b2Vec2 cA = data.positions[m_indexA].c;
-	float aA = data.positions[m_indexA].a;
+	fixed aA = data.positions[m_indexA].a;
 	b2Vec2 vA = data.velocities[m_indexA].v;
-	float wA = data.velocities[m_indexA].w;
+	fixed wA = data.velocities[m_indexA].w;
 
 	b2Vec2 cB = data.positions[m_indexB].c;
-	float aB = data.positions[m_indexB].a;
+	fixed aB = data.positions[m_indexB].a;
 	b2Vec2 vB = data.velocities[m_indexB].v;
-	float wB = data.velocities[m_indexB].w;
+	fixed wB = data.velocities[m_indexB].w;
 
 	b2Rot qA(aA), qB(aB);
 
@@ -104,21 +104,21 @@ void b2PulleyJoint::InitVelocityConstraints(const b2SolverData& data)
 	m_uA = cA + m_rA - m_groundAnchorA;
 	m_uB = cB + m_rB - m_groundAnchorB;
 
-	float lengthA = m_uA.Length();
-	float lengthB = m_uB.Length();
+	fixed lengthA = m_uA.Length();
+	fixed lengthB = m_uB.Length();
 
-	if (lengthA > 10.0f * b2_linearSlop)
+	if (lengthA > fixed_ten * b2_linearSlop)
 	{
-		m_uA *= 1.0f / lengthA;
+		m_uA *= fixed_one / lengthA;
 	}
 	else
 	{
 		m_uA.SetZero();
 	}
 
-	if (lengthB > 10.0f * b2_linearSlop)
+	if (lengthB > fixed_ten * b2_linearSlop)
 	{
-		m_uB *= 1.0f / lengthB;
+		m_uB *= fixed_one / lengthB;
 	}
 	else
 	{
@@ -126,17 +126,17 @@ void b2PulleyJoint::InitVelocityConstraints(const b2SolverData& data)
 	}
 
 	// Compute effective mass.
-	float ruA = b2Cross(m_rA, m_uA);
-	float ruB = b2Cross(m_rB, m_uB);
+	fixed ruA = b2Cross(m_rA, m_uA);
+	fixed ruB = b2Cross(m_rB, m_uB);
 
-	float mA = m_invMassA + m_invIA * ruA * ruA;
-	float mB = m_invMassB + m_invIB * ruB * ruB;
+	fixed mA = m_invMassA + m_invIA * ruA * ruA;
+	fixed mB = m_invMassB + m_invIB * ruB * ruB;
 
 	m_mass = mA + m_ratio * m_ratio * mB;
 
-	if (m_mass > 0.0f)
+	if (m_mass > fixed_zero)
 	{
-		m_mass = 1.0f / m_mass;
+		m_mass = fixed_one / m_mass;
 	}
 
 	if (data.step.warmStarting)
@@ -155,7 +155,7 @@ void b2PulleyJoint::InitVelocityConstraints(const b2SolverData& data)
 	}
 	else
 	{
-		m_impulse = 0.0f;
+		m_impulse = fixed_zero;
 	}
 
 	data.velocities[m_indexA].v = vA;
@@ -167,15 +167,15 @@ void b2PulleyJoint::InitVelocityConstraints(const b2SolverData& data)
 void b2PulleyJoint::SolveVelocityConstraints(const b2SolverData& data)
 {
 	b2Vec2 vA = data.velocities[m_indexA].v;
-	float wA = data.velocities[m_indexA].w;
+	fixed wA = data.velocities[m_indexA].w;
 	b2Vec2 vB = data.velocities[m_indexB].v;
-	float wB = data.velocities[m_indexB].w;
+	fixed wB = data.velocities[m_indexB].w;
 
 	b2Vec2 vpA = vA + b2Cross(wA, m_rA);
 	b2Vec2 vpB = vB + b2Cross(wB, m_rB);
 
-	float Cdot = -b2Dot(m_uA, vpA) - m_ratio * b2Dot(m_uB, vpB);
-	float impulse = -m_mass * Cdot;
+	fixed Cdot = -b2Dot(m_uA, vpA) - m_ratio * b2Dot(m_uB, vpB);
+	fixed impulse = -m_mass * Cdot;
 	m_impulse += impulse;
 
 	b2Vec2 PA = -impulse * m_uA;
@@ -194,9 +194,9 @@ void b2PulleyJoint::SolveVelocityConstraints(const b2SolverData& data)
 bool b2PulleyJoint::SolvePositionConstraints(const b2SolverData& data)
 {
 	b2Vec2 cA = data.positions[m_indexA].c;
-	float aA = data.positions[m_indexA].a;
+	fixed aA = data.positions[m_indexA].a;
 	b2Vec2 cB = data.positions[m_indexB].c;
-	float aB = data.positions[m_indexB].a;
+	fixed aB = data.positions[m_indexB].a;
 
 	b2Rot qA(aA), qB(aB);
 
@@ -207,21 +207,21 @@ bool b2PulleyJoint::SolvePositionConstraints(const b2SolverData& data)
 	b2Vec2 uA = cA + rA - m_groundAnchorA;
 	b2Vec2 uB = cB + rB - m_groundAnchorB;
 
-	float lengthA = uA.Length();
-	float lengthB = uB.Length();
+	fixed lengthA = uA.Length();
+	fixed lengthB = uB.Length();
 
-	if (lengthA > 10.0f * b2_linearSlop)
+	if (lengthA > fixed_ten * b2_linearSlop)
 	{
-		uA *= 1.0f / lengthA;
+		uA *= fixed_one / lengthA;
 	}
 	else
 	{
 		uA.SetZero();
 	}
 
-	if (lengthB > 10.0f * b2_linearSlop)
+	if (lengthB > fixed_ten * b2_linearSlop)
 	{
-		uB *= 1.0f / lengthB;
+		uB *= fixed_one / lengthB;
 	}
 	else
 	{
@@ -229,23 +229,23 @@ bool b2PulleyJoint::SolvePositionConstraints(const b2SolverData& data)
 	}
 
 	// Compute effective mass.
-	float ruA = b2Cross(rA, uA);
-	float ruB = b2Cross(rB, uB);
+	fixed ruA = b2Cross(rA, uA);
+	fixed ruB = b2Cross(rB, uB);
 
-	float mA = m_invMassA + m_invIA * ruA * ruA;
-	float mB = m_invMassB + m_invIB * ruB * ruB;
+	fixed mA = m_invMassA + m_invIA * ruA * ruA;
+	fixed mB = m_invMassB + m_invIB * ruB * ruB;
 
-	float mass = mA + m_ratio * m_ratio * mB;
+	fixed mass = mA + m_ratio * m_ratio * mB;
 
-	if (mass > 0.0f)
+	if (mass > fixed_zero)
 	{
-		mass = 1.0f / mass;
+		mass = fixed_one / mass;
 	}
 
-	float C = m_constant - lengthA - m_ratio * lengthB;
-	float linearError = b2Abs(C);
+	fixed C = m_constant - lengthA - m_ratio * lengthB;
+	fixed linearError = b2Abs(C);
 
-	float impulse = -mass * C;
+	fixed impulse = -mass * C;
 
 	b2Vec2 PA = -impulse * uA;
 	b2Vec2 PB = -m_ratio * impulse * uB;
@@ -273,16 +273,16 @@ b2Vec2 b2PulleyJoint::GetAnchorB() const
 	return m_bodyB->GetWorldPoint(m_localAnchorB);
 }
 
-b2Vec2 b2PulleyJoint::GetReactionForce(float inv_dt) const
+b2Vec2 b2PulleyJoint::GetReactionForce(fixed inv_dt) const
 {
 	b2Vec2 P = m_impulse * m_uB;
 	return inv_dt * P;
 }
 
-float b2PulleyJoint::GetReactionTorque(float inv_dt) const
+fixed b2PulleyJoint::GetReactionTorque(fixed inv_dt) const
 {
 	B2_NOT_USED(inv_dt);
-	return 0.0f;
+	return fixed_zero;
 }
 
 b2Vec2 b2PulleyJoint::GetGroundAnchorA() const
@@ -295,22 +295,22 @@ b2Vec2 b2PulleyJoint::GetGroundAnchorB() const
 	return m_groundAnchorB;
 }
 
-float b2PulleyJoint::GetLengthA() const
+fixed b2PulleyJoint::GetLengthA() const
 {
 	return m_lengthA;
 }
 
-float b2PulleyJoint::GetLengthB() const
+fixed b2PulleyJoint::GetLengthB() const
 {
 	return m_lengthB;
 }
 
-float b2PulleyJoint::GetRatio() const
+fixed b2PulleyJoint::GetRatio() const
 {
 	return m_ratio;
 }
 
-float b2PulleyJoint::GetCurrentLengthA() const
+fixed b2PulleyJoint::GetCurrentLengthA() const
 {
 	b2Vec2 p = m_bodyA->GetWorldPoint(m_localAnchorA);
 	b2Vec2 s = m_groundAnchorA;
@@ -318,7 +318,7 @@ float b2PulleyJoint::GetCurrentLengthA() const
 	return d.Length();
 }
 
-float b2PulleyJoint::GetCurrentLengthB() const
+fixed b2PulleyJoint::GetCurrentLengthB() const
 {
 	b2Vec2 p = m_bodyB->GetWorldPoint(m_localAnchorB);
 	b2Vec2 s = m_groundAnchorB;

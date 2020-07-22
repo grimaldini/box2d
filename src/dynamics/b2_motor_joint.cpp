@@ -46,8 +46,8 @@ void b2MotorJointDef::Initialize(b2Body* bA, b2Body* bB)
 	b2Vec2 xB = bodyB->GetPosition();
 	linearOffset = bodyA->GetLocalPoint(xB);
 
-	float angleA = bodyA->GetAngle();
-	float angleB = bodyB->GetAngle();
+	fixed angleA = bodyA->GetAngle();
+	fixed angleB = bodyB->GetAngle();
 	angularOffset = angleB - angleA;
 }
 
@@ -58,7 +58,7 @@ b2MotorJoint::b2MotorJoint(const b2MotorJointDef* def)
 	m_angularOffset = def->angularOffset;
 
 	m_linearImpulse.SetZero();
-	m_angularImpulse = 0.0f;
+	m_angularImpulse = fixed_zero;
 
 	m_maxForce = def->maxForce;
 	m_maxTorque = def->maxTorque;
@@ -77,14 +77,14 @@ void b2MotorJoint::InitVelocityConstraints(const b2SolverData& data)
 	m_invIB = m_bodyB->m_invI;
 
 	b2Vec2 cA = data.positions[m_indexA].c;
-	float aA = data.positions[m_indexA].a;
+	fixed aA = data.positions[m_indexA].a;
 	b2Vec2 vA = data.velocities[m_indexA].v;
-	float wA = data.velocities[m_indexA].w;
+	fixed wA = data.velocities[m_indexA].w;
 
 	b2Vec2 cB = data.positions[m_indexB].c;
-	float aB = data.positions[m_indexB].a;
+	fixed aB = data.positions[m_indexB].a;
 	b2Vec2 vB = data.velocities[m_indexB].v;
-	float wB = data.velocities[m_indexB].w;
+	fixed wB = data.velocities[m_indexB].w;
 
 	b2Rot qA(aA), qB(aB);
 
@@ -100,8 +100,8 @@ void b2MotorJoint::InitVelocityConstraints(const b2SolverData& data)
 	//     [  -r1y*iA*r1x-r2y*iB*r2x, mA+r1x^2*iA+mB+r2x^2*iB,           r1x*iA+r2x*iB]
 	//     [          -r1y*iA-r2y*iB,           r1x*iA+r2x*iB,                   iA+iB]
 
-	float mA = m_invMassA, mB = m_invMassB;
-	float iA = m_invIA, iB = m_invIB;
+	fixed mA = m_invMassA, mB = m_invMassB;
+	fixed iA = m_invIA, iB = m_invIB;
 
 	// Upper 2 by 2 of K for point to point
 	b2Mat22 K;
@@ -113,9 +113,9 @@ void b2MotorJoint::InitVelocityConstraints(const b2SolverData& data)
 	m_linearMass = K.GetInverse();
 
 	m_angularMass = iA + iB;
-	if (m_angularMass > 0.0f)
+	if (m_angularMass > fixed_zero)
 	{
-		m_angularMass = 1.0f / m_angularMass;
+		m_angularMass = fixed_one / m_angularMass;
 	}
 
 	m_linearError = cB + m_rB - cA - m_rA;
@@ -136,7 +136,7 @@ void b2MotorJoint::InitVelocityConstraints(const b2SolverData& data)
 	else
 	{
 		m_linearImpulse.SetZero();
-		m_angularImpulse = 0.0f;
+		m_angularImpulse = fixed_zero;
 	}
 
 	data.velocities[m_indexA].v = vA;
@@ -148,23 +148,23 @@ void b2MotorJoint::InitVelocityConstraints(const b2SolverData& data)
 void b2MotorJoint::SolveVelocityConstraints(const b2SolverData& data)
 {
 	b2Vec2 vA = data.velocities[m_indexA].v;
-	float wA = data.velocities[m_indexA].w;
+	fixed wA = data.velocities[m_indexA].w;
 	b2Vec2 vB = data.velocities[m_indexB].v;
-	float wB = data.velocities[m_indexB].w;
+	fixed wB = data.velocities[m_indexB].w;
 
-	float mA = m_invMassA, mB = m_invMassB;
-	float iA = m_invIA, iB = m_invIB;
+	fixed mA = m_invMassA, mB = m_invMassB;
+	fixed iA = m_invIA, iB = m_invIB;
 
-	float h = data.step.dt;
-	float inv_h = data.step.inv_dt;
+	fixed h = data.step.dt;
+	fixed inv_h = data.step.inv_dt;
 
 	// Solve angular friction
 	{
-		float Cdot = wB - wA + inv_h * m_correctionFactor * m_angularError;
-		float impulse = -m_angularMass * Cdot;
+		fixed Cdot = wB - wA + inv_h * m_correctionFactor * m_angularError;
+		fixed impulse = -m_angularMass * Cdot;
 
-		float oldImpulse = m_angularImpulse;
-		float maxImpulse = h * m_maxTorque;
+		fixed oldImpulse = m_angularImpulse;
+		fixed maxImpulse = h * m_maxTorque;
 		m_angularImpulse = b2Clamp(m_angularImpulse + impulse, -maxImpulse, maxImpulse);
 		impulse = m_angularImpulse - oldImpulse;
 
@@ -180,7 +180,7 @@ void b2MotorJoint::SolveVelocityConstraints(const b2SolverData& data)
 		b2Vec2 oldImpulse = m_linearImpulse;
 		m_linearImpulse += impulse;
 
-		float maxImpulse = h * m_maxForce;
+		fixed maxImpulse = h * m_maxForce;
 
 		if (m_linearImpulse.LengthSquared() > maxImpulse * maxImpulse)
 		{
@@ -220,45 +220,45 @@ b2Vec2 b2MotorJoint::GetAnchorB() const
 	return m_bodyB->GetPosition();
 }
 
-b2Vec2 b2MotorJoint::GetReactionForce(float inv_dt) const
+b2Vec2 b2MotorJoint::GetReactionForce(fixed inv_dt) const
 {
 	return inv_dt * m_linearImpulse;
 }
 
-float b2MotorJoint::GetReactionTorque(float inv_dt) const
+fixed b2MotorJoint::GetReactionTorque(fixed inv_dt) const
 {
 	return inv_dt * m_angularImpulse;
 }
 
-void b2MotorJoint::SetMaxForce(float force)
+void b2MotorJoint::SetMaxForce(fixed force)
 {
-	b2Assert(b2IsValid(force) && force >= 0.0f);
+	b2Assert(b2IsValid(force) && force >= fixed_zero);
 	m_maxForce = force;
 }
 
-float b2MotorJoint::GetMaxForce() const
+fixed b2MotorJoint::GetMaxForce() const
 {
 	return m_maxForce;
 }
 
-void b2MotorJoint::SetMaxTorque(float torque)
+void b2MotorJoint::SetMaxTorque(fixed torque)
 {
-	b2Assert(b2IsValid(torque) && torque >= 0.0f);
+	b2Assert(b2IsValid(torque) && torque >= fixed_zero);
 	m_maxTorque = torque;
 }
 
-float b2MotorJoint::GetMaxTorque() const
+fixed b2MotorJoint::GetMaxTorque() const
 {
 	return m_maxTorque;
 }
 
-void b2MotorJoint::SetCorrectionFactor(float factor)
+void b2MotorJoint::SetCorrectionFactor(fixed factor)
 {
-	b2Assert(b2IsValid(factor) && 0.0f <= factor && factor <= 1.0f);
+	b2Assert(b2IsValid(factor) && fixed_zero <= factor && factor <= fixed_one);
 	m_correctionFactor = factor;
 }
 
-float b2MotorJoint::GetCorrectionFactor() const
+fixed b2MotorJoint::GetCorrectionFactor() const
 {
 	return m_correctionFactor;
 }
@@ -278,7 +278,7 @@ const b2Vec2& b2MotorJoint::GetLinearOffset() const
 	return m_linearOffset;
 }
 
-void b2MotorJoint::SetAngularOffset(float angularOffset)
+void b2MotorJoint::SetAngularOffset(fixed angularOffset)
 {
 	if (angularOffset != m_angularOffset)
 	{
@@ -288,7 +288,7 @@ void b2MotorJoint::SetAngularOffset(float angularOffset)
 	}
 }
 
-float b2MotorJoint::GetAngularOffset() const
+fixed b2MotorJoint::GetAngularOffset() const
 {
 	return m_angularOffset;
 }

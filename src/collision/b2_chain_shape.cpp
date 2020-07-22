@@ -175,11 +175,11 @@ void b2ChainShape::ComputeAABB(b2AABB* aabb, const b2Transform& xf, int32 childI
 	aabb->upperBound = upper + r;
 }
 
-void b2ChainShape::ComputeMass(b2MassData* massData, float density) const
+void b2ChainShape::ComputeMass(b2MassData* massData, fixed density) const
 {
 	B2_NOT_USED(density);
 
-	massData->mass = 0.0f;
+	massData->mass = fixed_zero;
 	massData->center.SetZero();
-	massData->I = 0.0f;
+	massData->I = fixed_zero;
 }

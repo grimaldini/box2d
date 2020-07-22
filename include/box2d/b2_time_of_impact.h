@@ -33,7 +33,7 @@ struct b2TOIInput
 	b2DistanceProxy proxyB;
 	b2Sweep sweepA;
 	b2Sweep sweepB;
-	float tMax;		// defines sweep interval [0, tMax]
+	fixed tMax;		// defines sweep interval [0, tMax]
 };
 
 /// Output parameters for b2TimeOfImpact.
@@ -49,7 +49,7 @@ struct b2TOIOutput
 	};
 
 	State state;
-	float t;
+	fixed t;
 };
 
 /// Compute the upper bound on time before two shapes penetrate. Time is represented as

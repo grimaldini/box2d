@@ -57,12 +57,12 @@ void b2Timer::Reset()
 	m_start = double(largeInteger.QuadPart);
 }
 
-float b2Timer::GetMilliseconds() const
+fixed b2Timer::GetMilliseconds() const
 {
 	LARGE_INTEGER largeInteger;
 	QueryPerformanceCounter(&largeInteger);
 	double count = double(largeInteger.QuadPart);
-	float ms = float(s_invFrequency * (count - m_start));
+	fixed ms = fixed(s_invFrequency * (count - m_start));
 	return ms;
 }
 
@@ -83,7 +83,7 @@ void b2Timer::Reset()
     m_start_usec = t.tv_usec;
 }
 
-float b2Timer::GetMilliseconds() const
+fixed b2Timer::GetMilliseconds() const
 {
     timeval t;
     gettimeofday(&t, 0);
@@ -104,7 +104,7 @@ float b2Timer::GetMilliseconds() const
 		start_usec += 1000000 * nsec;
 		start_sec -= nsec;
 	}
-	return 1000.0f * (t.tv_sec - start_sec) + 0.001f * (t.tv_usec - start_usec);
+	return fixed_thousand * fixed(t.tv_sec - start_sec) + fixed_thousandth * fixed(t.tv_usec - start_usec);
 }
 
 #else
@@ -117,9 +117,9 @@ void b2Timer::Reset()
 {
 }
 
-float b2Timer::GetMilliseconds() const
+fixed b2Timer::GetMilliseconds() const
 {
-	return 0.0f;
+	return fixed_zero;
 }
 
 #endif

@@ -22,16 +22,16 @@
 
 #include "box2d/b2_math.h"
 
-const b2Vec2 b2Vec2_zero(0.0f, 0.0f);
+const b2Vec2 b2Vec2_zero(fixed_zero, fixed_zero);
 
 /// Solve A * x = b, where b is a column vector. This is more efficient
 /// than computing the inverse in one-shot cases.
 b2Vec3 b2Mat33::Solve33(const b2Vec3& b) const
 {
-	float det = b2Dot(ex, b2Cross(ey, ez));
-	if (det != 0.0f)
+	fixed det = b2Dot(ex, b2Cross(ey, ez));
+	if (det != fixed_zero)
 	{
-		det = 1.0f / det;
+		det = fixed_one / det;
 	}
 	b2Vec3 x;
 	x.x = det * b2Dot(b, b2Cross(ey, ez));
@@ -44,11 +44,11 @@ b2Vec3 b2Mat33::Solve33(const b2Vec3& b) const
 /// than computing the inverse in one-shot cases.
 b2Vec2 b2Mat33::Solve22(const b2Vec2& b) const
 {
-	float a11 = ex.x, a12 = ey.x, a21 = ex.y, a22 = ey.y;
-	float det = a11 * a22 - a12 * a21;
-	if (det != 0.0f)
+	fixed a11 = ex.x, a12 = ey.x, a21 = ex.y, a22 = ey.y;
+	fixed det = a11 * a22 - a12 * a21;
+	if (det != fixed_zero)
 	{
-		det = 1.0f / det;
+		det = fixed_one / det;
 	}
 	b2Vec2 x;
 	x.x = det * (a22 * b.x - a12 * b.y);
@@ -59,30 +59,30 @@ b2Vec2 b2Mat33::Solve22(const b2Vec2& b) const
 ///
 void b2Mat33::GetInverse22(b2Mat33* M) const
 {
-	float a = ex.x, b = ey.x, c = ex.y, d = ey.y;
-	float det = a * d - b * c;
-	if (det != 0.0f)
+	fixed a = ex.x, b = ey.x, c = ex.y, d = ey.y;
+	fixed det = a * d - b * c;
+	if (det != fixed_zero)
 	{
-		det = 1.0f / det;
+		det = fixed_one / det;
 	}
 
-	M->ex.x =  det * d;	M->ey.x = -det * b; M->ex.z = 0.0f;
-	M->ex.y = -det * c;	M->ey.y =  det * a; M->ey.z = 0.0f;
-	M->ez.x = 0.0f; M->ez.y = 0.0f; M->ez.z = 0.0f;
+	M->ex.x =  det * d;	M->ey.x = -det * b; M->ex.z = fixed_zero;
+	M->ex.y = -det * c;	M->ey.y =  det * a; M->ey.z = fixed_zero;
+	M->ez.x = fixed_zero; M->ez.y = fixed_zero; M->ez.z = fixed_zero;
 }
 
 /// Returns the zero matrix if singular.
 void b2Mat33::GetSymInverse33(b2Mat33* M) const
 {
-	float det = b2Dot(ex, b2Cross(ey, ez));
-	if (det != 0.0f)
+	fixed det = b2Dot(ex, b2Cross(ey, ez));
+	if (det != fixed_zero)
 	{
-		det = 1.0f / det;
+		det = fixed_one / det;
 	}
 
-	float a11 = ex.x, a12 = ey.x, a13 = ez.x;
-	float a22 = ey.y, a23 = ez.y;
-	float a33 = ez.z;
+	fixed a11 = ex.x, a12 = ey.x, a13 = ez.x;
+	fixed a22 = ey.y, a23 = ez.y;
+	fixed a33 = ez.z;
 
 	M->ex.x = det * (a22 * a33 - a23 * a23);
 	M->ex.y = det * (a13 * a23 - a12 * a33);

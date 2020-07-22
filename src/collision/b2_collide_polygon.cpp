@@ -24,7 +24,7 @@
 #include "box2d/b2_polygon_shape.h"
 
 // Find the max separation between poly1 and poly2 using edge normals from poly1.
-static float b2FindMaxSeparation(int32* edgeIndex,
+static fixed b2FindMaxSeparation(int32* edgeIndex,
 								 const b2PolygonShape* poly1, const b2Transform& xf1,
 								 const b2PolygonShape* poly2, const b2Transform& xf2)
 {
@@ -36,7 +36,7 @@ static float b2FindMaxSeparation(int32* edgeIndex,
 	b2Transform xf = b2MulT(xf2, xf1);
 
 	int32 bestIndex = 0;
-	float maxSeparation = -b2_maxFloat;
+	fixed maxSeparation = -b2_max;
 	for (int32 i = 0; i < count1; ++i)
 	{
 		// Get poly1 normal in frame2.
@@ -44,10 +44,10 @@ static float b2FindMaxSeparation(int32* edgeIndex,
 		b2Vec2 v1 = b2Mul(xf, v1s[i]);
 
 		// Find deepest point for normal i.
-		float si = b2_maxFloat;
+		fixed si = b2_max;
 		for (int32 j = 0; j < count2; ++j)
 		{
-			float sij = b2Dot(n, v2s[j] - v1);
+			fixed sij = b2Dot(n, v2s[j] - v1);
 			if (sij < si)
 			{
 				si = sij;
@@ -82,10 +82,10 @@ static void b2FindIncidentEdge(b2ClipVertex c[2],
 
 	// Find the incident edge on poly2.
 	int32 index = 0;
-	float minDot = b2_maxFloat;
+	fixed minDot = b2_max;
 	for (int32 i = 0; i < count2; ++i)
 	{
-		float dot = b2Dot(normal1, normals2[i]);
+		fixed dot = b2Dot(normal1, normals2[i]);
 		if (dot < minDot)
 		{
 			minDot = dot;
@@ -122,15 +122,15 @@ void b2CollidePolygons(b2Manifold* manifold,
 					  const b2PolygonShape* polyB, const b2Transform& xfB)
 {
 	manifold->pointCount = 0;
-	float totalRadius = polyA->m_radius + polyB->m_radius;
+	fixed totalRadius = polyA->m_radius + polyB->m_radius;
 
 	int32 edgeA = 0;
-	float separationA = b2FindMaxSeparation(&edgeA, polyA, xfA, polyB, xfB);
+	fixed separationA = b2FindMaxSeparation(&edgeA, polyA, xfA, polyB, xfB);
 	if (separationA > totalRadius)
 		return;
 
 	int32 edgeB = 0;
-	float separationB = b2FindMaxSeparation(&edgeB, polyB, xfB, polyA, xfA);
+	fixed separationB = b2FindMaxSeparation(&edgeB, polyB, xfB, polyA, xfA);
 	if (separationB > totalRadius)
 		return;
 
@@ -139,7 +139,7 @@ void b2CollidePolygons(b2Manifold* manifold,
 	b2Transform xf1, xf2;
 	int32 edge1;					// reference edge
 	uint8 flip;
-	const float k_tol = 0.1f * b2_linearSlop;
+	const fixed k_tol = fixed_tenth * b2_linearSlop;
 
 	if (separationB > separationA + k_tol)
 	{
@@ -177,21 +177,21 @@ void b2CollidePolygons(b2Manifold* manifold,
 	b2Vec2 localTangent = v12 - v11;
 	localTangent.Normalize();
 	
-	b2Vec2 localNormal = b2Cross(localTangent, 1.0f);
-	b2Vec2 planePoint = 0.5f * (v11 + v12);
+	b2Vec2 localNormal = b2Cross(localTangent, fixed_one);
+	b2Vec2 planePoint = fixed_half * (v11 + v12);
 
 	b2Vec2 tangent = b2Mul(xf1.q, localTangent);
-	b2Vec2 normal = b2Cross(tangent, 1.0f);
+	b2Vec2 normal = b2Cross(tangent, fixed_one);
 	
 	v11 = b2Mul(xf1, v11);
 	v12 = b2Mul(xf1, v12);
 
 	// Face offset.
-	float frontOffset = b2Dot(normal, v11);
+	fixed frontOffset = b2Dot(normal, v11);
 
 	// Side offsets, extended by polytope skin thickness.
-	float sideOffset1 = -b2Dot(tangent, v11) + totalRadius;
-	float sideOffset2 = b2Dot(tangent, v12) + totalRadius;
+	fixed sideOffset1 = -b2Dot(tangent, v11) + totalRadius;
+	fixed sideOffset2 = b2Dot(tangent, v12) + totalRadius;
 
 	// Clip incident edge against extruded edge1 side edges.
 	b2ClipVertex clipPoints1[2];
@@ -219,7 +219,7 @@ void b2CollidePolygons(b2Manifold* manifold,
 	int32 pointCount = 0;
 	for (int32 i = 0; i < b2_maxManifoldPoints; ++i)
 	{
-		float separation = b2Dot(normal, clipPoints2[i].v) - frontOffset;
+		fixed separation = b2Dot(normal, clipPoints2[i].v) - frontOffset;
 
 		if (separation <= totalRadius)
 		{

@@ -100,7 +100,7 @@ public:
 	int32 GetTreeBalance() const;
 
 	/// Get the quality metric of the embedded tree.
-	float GetTreeQuality() const;
+	fixed GetTreeQuality() const;
 
 	/// Shift the world origin. Useful for large worlds.
 	/// The shift formula is: position -= newOrigin
@@ -163,7 +163,7 @@ inline int32 b2BroadPhase::GetTreeBalance() const
 	return m_tree.GetMaxBalance();
 }
 
-inline float b2BroadPhase::GetTreeQuality() const
+inline fixed b2BroadPhase::GetTreeQuality() const
 {
 	return m_tree.GetAreaRatio();
 }

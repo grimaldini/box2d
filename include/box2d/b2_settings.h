@@ -23,9 +23,8 @@
 #ifndef B2_SETTINGS_H
 #define B2_SETTINGS_H
 
-#include <stddef.h>
 #include <assert.h>
-#include <float.h>
+#include <fpm/fixed.hpp>
 
 #if !defined(NDEBUG)
 	#define b2DEBUG
@@ -40,10 +39,30 @@ typedef signed int int32;
 typedef unsigned char uint8;
 typedef unsigned short uint16;
 typedef unsigned int uint32;
+typedef fpm::fixed_16_16 fixed;
 
-#define	b2_maxFloat		FLT_MAX
-#define	b2_epsilon		FLT_EPSILON
-#define b2_pi			3.14159265359f
+#define fixed_zero				fixed(0)
+#define fixed_one				fixed(1)
+#define fixed_two				fixed(2)
+#define fixed_three				fixed(3)
+#define fixed_four				fixed(4)
+#define fixed_five				fixed(5)
+#define fixed_ten				fixed(10)
+#define fixed_hundred			fixed(100)
+#define fixed_thousand			fixed(1000)
+#define fixed_half				fixed(1, 2)
+#define fixed_third				fixed(1, 3)
+#define fixed_quarter			fixed(1, 4)
+#define fixed_fifth				fixed(1, 5)
+#define fixed_three_quarters	fixed(3, 4)
+#define fixed_tenth				fixed(1, 10)
+#define fixed_hundredth			fixed(1, 100)
+#define fixed_thousandth		fixed(1, 1000)
+
+#define b2_max					std::numeric_limits<fixed>::max()
+#define b2_epsilon				std::numeric_limits<fixed>::epsilon()
+#define b2_two_pi				fixed::two_pi()
+#define b2_pi					fixed::pi()
 
 /// @file
 /// Global tuning constants based on meters-kilograms-seconds (MKS) units.
@@ -62,25 +81,25 @@ typedef unsigned int uint32;
 /// This is used to fatten AABBs in the dynamic tree. This allows proxies
 /// to move by a small amount without triggering a tree adjustment.
 /// This is in meters.
-#define b2_aabbExtension		0.1f
+#define b2_aabbExtension		fixed_tenth
 
 /// This is used to fatten AABBs in the dynamic tree. This is used to predict
 /// the future position based on the current displacement.
 /// This is a dimensionless multiplier.
-#define b2_aabbMultiplier		4.0f
+#define b2_aabbMultiplier		fixed_four
 
 /// A small length used as a collision and constraint tolerance. Usually it is
 /// chosen to be numerically significant, but visually insignificant.
-#define b2_linearSlop			0.005f
+#define b2_linearSlop			fixed(5, 1000)
 
 /// A small angle used as a collision and constraint tolerance. Usually it is
 /// chosen to be numerically significant, but visually insignificant.
-#define b2_angularSlop			(2.0f / 180.0f * b2_pi)
+#define b2_angularSlop			(fixed(2, 180) * b2_pi)
 
 /// The radius of the polygon/edge shape skin. This should not be modified. Making
 /// this smaller means polygons will have an insufficient buffer for continuous collision.
 /// Making it larger may create artifacts for vertex collision.
-#define b2_polygonRadius		(2.0f * b2_linearSlop)
+#define b2_polygonRadius		(fixed_two * b2_linearSlop)
 
 /// Maximum number of sub-steps per contact in continuous physics simulation.
 #define b2_maxSubSteps			8
@@ -93,43 +112,43 @@ typedef unsigned int uint32;
 
 /// A velocity threshold for elastic collisions. Any collision with a relative linear
 /// velocity below this threshold will be treated as inelastic.
-#define b2_velocityThreshold		1.0f
+#define b2_velocityThreshold		fixed_one
 
 /// The maximum linear position correction used when solving constraints. This helps to
 /// prevent overshoot.
-#define b2_maxLinearCorrection		0.2f
+#define b2_maxLinearCorrection		fixed(2, 10)
 
 /// The maximum angular position correction used when solving constraints. This helps to
 /// prevent overshoot.
-#define b2_maxAngularCorrection		(8.0f / 180.0f * b2_pi)
+#define b2_maxAngularCorrection		(fixed(8, 180) * b2_pi)
 
 /// The maximum linear velocity of a body. This limit is very large and is used
 /// to prevent numerical problems. You shouldn't need to adjust this.
-#define b2_maxTranslation			2.0f
+#define b2_maxTranslation			fixed_two
 #define b2_maxTranslationSquared	(b2_maxTranslation * b2_maxTranslation)
 
 /// The maximum angular velocity of a body. This limit is very large and is used
 /// to prevent numerical problems. You shouldn't need to adjust this.
-#define b2_maxRotation				(0.5f * b2_pi)
+#define b2_maxRotation				(fixed_half * b2_pi)
 #define b2_maxRotationSquared		(b2_maxRotation * b2_maxRotation)
 
 /// This scale factor controls how fast overlap is resolved. Ideally this would be 1 so
 /// that overlap is removed in one time step. However using values close to 1 often lead
 /// to overshoot.
-#define b2_baumgarte				0.2f
-#define b2_toiBaumgarte				0.75f
+#define b2_baumgarte				fixed(2, 10)
+#define b2_toiBaumgarte				fixed_three_quarters
 
 
 // Sleep
 
 /// The time that a body must be still before it will go to sleep.
-#define b2_timeToSleep				0.5f
+#define b2_timeToSleep				fixed_half
 
 /// A body cannot sleep if its linear velocity is above this tolerance.
-#define b2_linearSleepTolerance		0.01f
+#define b2_linearSleepTolerance		fixed_hundredth
 
 /// A body cannot sleep if its angular velocity is above this tolerance.
-#define b2_angularSleepTolerance	(2.0f / 180.0f * b2_pi)
+#define b2_angularSleepTolerance	(fixed(2, 180) * b2_pi)
 
 // Memory Allocation
 

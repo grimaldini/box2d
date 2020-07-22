@@ -58,9 +58,9 @@ b2DistanceJoint::b2DistanceJoint(const b2DistanceJointDef* def)
 	m_length = def->length;
 	m_frequencyHz = def->frequencyHz;
 	m_dampingRatio = def->dampingRatio;
-	m_impulse = 0.0f;
-	m_gamma = 0.0f;
-	m_bias = 0.0f;
+	m_impulse = fixed_zero;
+	m_gamma = fixed_zero;
+	m_bias = fixed_zero;
 }
 
 void b2DistanceJoint::InitVelocityConstraints(const b2SolverData& data)
@@ -75,14 +75,14 @@ void b2DistanceJoint::InitVelocityConstraints(const b2SolverData& data)
 	m_invIB = m_bodyB->m_invI;
 
 	b2Vec2 cA = data.positions[m_indexA].c;
-	float aA = data.positions[m_indexA].a;
+	fixed aA = data.positions[m_indexA].a;
 	b2Vec2 vA = data.velocities[m_indexA].v;
-	float wA = data.velocities[m_indexA].w;
+	fixed wA = data.velocities[m_indexA].w;
 
 	b2Vec2 cB = data.positions[m_indexB].c;
-	float aB = data.positions[m_indexB].a;
+	fixed aB = data.positions[m_indexB].a;
 	b2Vec2 vB = data.velocities[m_indexB].v;
-	float wB = data.velocities[m_indexB].w;
+	fixed wB = data.velocities[m_indexB].w;
 
 	b2Rot qA(aA), qB(aB);
 
@@ -91,51 +91,51 @@ void b2DistanceJoint::InitVelocityConstraints(const b2SolverData& data)
 	m_u = cB + m_rB - cA - m_rA;
 
 	// Handle singularity.
-	float length = m_u.Length();
+	fixed length = m_u.Length();
 	if (length > b2_linearSlop)
 	{
-		m_u *= 1.0f / length;
+		m_u *= fixed_one / length;
 	}
 	else
 	{
-		m_u.Set(0.0f, 0.0f);
+		m_u.Set(fixed_zero, fixed_zero);
 	}
 
-	float crAu = b2Cross(m_rA, m_u);
-	float crBu = b2Cross(m_rB, m_u);
-	float invMass = m_invMassA + m_invIA * crAu * crAu + m_invMassB + m_invIB * crBu * crBu;
+	fixed crAu = b2Cross(m_rA, m_u);
+	fixed crBu = b2Cross(m_rB, m_u);
+	fixed invMass = m_invMassA + m_invIA * crAu * crAu + m_invMassB + m_invIB * crBu * crBu;
 
 	// Compute the effective mass matrix.
-	m_mass = invMass != 0.0f ? 1.0f / invMass : 0.0f;
+	m_mass = invMass != fixed_zero ? fixed_one / invMass : fixed_zero;
 
-	if (m_frequencyHz > 0.0f)
+	if (m_frequencyHz > fixed_zero)
 	{
-		float C = length - m_length;
+		fixed C = length - m_length;
 
 		// Frequency
-		float omega = 2.0f * b2_pi * m_frequencyHz;
+		fixed omega = b2_two_pi * m_frequencyHz;
 
 		// Damping coefficient
-		float d = 2.0f * m_mass * m_dampingRatio * omega;
+		fixed d = fixed_two * m_mass * m_dampingRatio * omega;
 
 		// Spring stiffness
-		float k = m_mass * omega * omega;
+		fixed k = m_mass * omega * omega;
 
 		// magic formulas
-		float h = data.step.dt;
+		fixed h = data.step.dt;
 
 		// gamma = 1 / (h * (d + h * k)), the extra factor of h in the denominator is since the lambda is an impulse, not a force
 		m_gamma = h * (d + h * k);
-		m_gamma = m_gamma != 0.0f ? 1.0f / m_gamma : 0.0f;
+		m_gamma = m_gamma != fixed_zero ? fixed_one / m_gamma : fixed_zero;
 		m_bias = C * h * k * m_gamma;
 
 		invMass += m_gamma;
-		m_mass = invMass != 0.0f ? 1.0f / invMass : 0.0f;
+		m_mass = invMass != fixed_zero ? fixed_one / invMass : fixed_zero;
 	}
 	else
 	{
-		m_gamma = 0.0f;
-		m_bias = 0.0f;
+		m_gamma = fixed_zero;
+		m_bias = fixed_zero;
 	}
 
 	if (data.step.warmStarting)
@@ -151,7 +151,7 @@ void b2DistanceJoint::InitVelocityConstraints(const b2SolverData& data)
 	}
 	else
 	{
-		m_impulse = 0.0f;
+		m_impulse = fixed_zero;
 	}
 
 	data.velocities[m_indexA].v = vA;
@@ -163,16 +163,16 @@ void b2DistanceJoint::InitVelocityConstraints(const b2SolverData& data)
 void b2DistanceJoint::SolveVelocityConstraints(const b2SolverData& data)
 {
 	b2Vec2 vA = data.velocities[m_indexA].v;
-	float wA = data.velocities[m_indexA].w;
+	fixed wA = data.velocities[m_indexA].w;
 	b2Vec2 vB = data.velocities[m_indexB].v;
-	float wB = data.velocities[m_indexB].w;
+	fixed wB = data.velocities[m_indexB].w;
 
 	// Cdot = dot(u, v + cross(w, r))
 	b2Vec2 vpA = vA + b2Cross(wA, m_rA);
 	b2Vec2 vpB = vB + b2Cross(wB, m_rB);
-	float Cdot = b2Dot(m_u, vpB - vpA);
+	fixed Cdot = b2Dot(m_u, vpB - vpA);
 
-	float impulse = -m_mass * (Cdot + m_bias + m_gamma * m_impulse);
+	fixed impulse = -m_mass * (Cdot + m_bias + m_gamma * m_impulse);
 	m_impulse += impulse;
 
 	b2Vec2 P = impulse * m_u;
@@ -189,16 +189,16 @@ void b2DistanceJoint::SolveVelocityConstraints(const b2SolverData& data)
 
 bool b2DistanceJoint::SolvePositionConstraints(const b2SolverData& data)
 {
-	if (m_frequencyHz > 0.0f)
+	if (m_frequencyHz > fixed_zero)
 	{
 		// There is no position correction for soft distance constraints.
 		return true;
 	}
 
 	b2Vec2 cA = data.positions[m_indexA].c;
-	float aA = data.positions[m_indexA].a;
+	fixed aA = data.positions[m_indexA].a;
 	b2Vec2 cB = data.positions[m_indexB].c;
-	float aB = data.positions[m_indexB].a;
+	fixed aB = data.positions[m_indexB].a;
 
 	b2Rot qA(aA), qB(aB);
 
@@ -206,11 +206,11 @@ bool b2DistanceJoint::SolvePositionConstraints(const b2SolverData& data)
 	b2Vec2 rB = b2Mul(qB, m_localAnchorB - m_localCenterB);
 	b2Vec2 u = cB + rB - cA - rA;
 
-	float length = u.Normalize();
-	float C = length - m_length;
+	fixed length = u.Normalize();
+	fixed C = length - m_length;
 	C = b2Clamp(C, -b2_maxLinearCorrection, b2_maxLinearCorrection);
 
-	float impulse = -m_mass * C;
+	fixed impulse = -m_mass * C;
 	b2Vec2 P = impulse * u;
 
 	cA -= m_invMassA * P;
@@ -236,16 +236,16 @@ b2Vec2 b2DistanceJoint::GetAnchorB() const
 	return m_bodyB->GetWorldPoint(m_localAnchorB);
 }
 
-b2Vec2 b2DistanceJoint::GetReactionForce(float inv_dt) const
+b2Vec2 b2DistanceJoint::GetReactionForce(fixed inv_dt) const
 {
 	b2Vec2 F = (inv_dt * m_impulse) * m_u;
 	return F;
 }
 
-float b2DistanceJoint::GetReactionTorque(float inv_dt) const
+fixed b2DistanceJoint::GetReactionTorque(fixed inv_dt) const
 {
 	B2_NOT_USED(inv_dt);
-	return 0.0f;
+	return fixed_zero;
 }
 
 void b2DistanceJoint::Dump()

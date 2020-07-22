@@ -64,9 +64,9 @@ struct b2FixtureDef
 	{
 		shape = nullptr;
 		userData = nullptr;
-		friction = 0.2f;
-		restitution = 0.0f;
-		density = 0.0f;
+		friction = fixed(2, 10);
+		restitution = fixed_zero;
+		density = fixed_zero;
 		isSensor = false;
 	}
 
@@ -78,13 +78,13 @@ struct b2FixtureDef
 	void* userData;
 
 	/// The friction coefficient, usually in the range [0,1].
-	float friction;
+	fixed friction;
 
 	/// The restitution (elasticity) usually in the range [0,1].
-	float restitution;
+	fixed restitution;
 
 	/// The density, usually in kg/m^2.
-	float density;
+	fixed density;
 
 	/// A sensor shape collects contact information but never generates a collision
 	/// response.
@@ -173,24 +173,24 @@ public:
 
 	/// Set the density of this fixture. This will _not_ automatically adjust the mass
 	/// of the body. You must call b2Body::ResetMassData to update the body's mass.
-	void SetDensity(float density);
+	void SetDensity(fixed density);
 
 	/// Get the density of this fixture.
-	float GetDensity() const;
+	fixed GetDensity() const;
 
 	/// Get the coefficient of friction.
-	float GetFriction() const;
+	fixed GetFriction() const;
 
 	/// Set the coefficient of friction. This will _not_ change the friction of
 	/// existing contacts.
-	void SetFriction(float friction);
+	void SetFriction(fixed friction);
 
 	/// Get the coefficient of restitution.
-	float GetRestitution() const;
+	fixed GetRestitution() const;
 
 	/// Set the coefficient of restitution. This will _not_ change the restitution of
 	/// existing contacts.
-	void SetRestitution(float restitution);
+	void SetRestitution(fixed restitution);
 
 	/// Get the fixture's AABB. This AABB may be enlarge and/or stale.
 	/// If you need a more accurate AABB, compute it using the shape and
@@ -220,15 +220,15 @@ protected:
 
 	void Synchronize(b2BroadPhase* broadPhase, const b2Transform& xf1, const b2Transform& xf2);
 
-	float m_density;
+	fixed m_density;
 
 	b2Fixture* m_next;
 	b2Body* m_body;
 
 	b2Shape* m_shape;
 
-	float m_friction;
-	float m_restitution;
+	fixed m_friction;
+	fixed m_restitution;
 
 	b2FixtureProxy* m_proxies;
 	int32 m_proxyCount;
@@ -295,33 +295,33 @@ inline const b2Fixture* b2Fixture::GetNext() const
 	return m_next;
 }
 
-inline void b2Fixture::SetDensity(float density)
+inline void b2Fixture::SetDensity(fixed density)
 {
-	b2Assert(b2IsValid(density) && density >= 0.0f);
+	b2Assert(b2IsValid(density) && density >= fixed_zero);
 	m_density = density;
 }
 
-inline float b2Fixture::GetDensity() const
+inline fixed b2Fixture::GetDensity() const
 {
 	return m_density;
 }
 
-inline float b2Fixture::GetFriction() const
+inline fixed b2Fixture::GetFriction() const
 {
 	return m_friction;
 }
 
-inline void b2Fixture::SetFriction(float friction)
+inline void b2Fixture::SetFriction(fixed friction)
 {
 	m_friction = friction;
 }
 
-inline float b2Fixture::GetRestitution() const
+inline fixed b2Fixture::GetRestitution() const
 {
 	return m_restitution;
 }
 
-inline void b2Fixture::SetRestitution(float restitution)
+inline void b2Fixture::SetRestitution(fixed restitution)
 {
 	m_restitution = restitution;
 }

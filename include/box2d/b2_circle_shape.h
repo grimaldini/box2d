@@ -50,7 +50,7 @@ public:
 	void ComputeAABB(b2AABB* aabb, const b2Transform& transform, int32 childIndex) const override;
 
 	/// @see b2Shape::ComputeMass
-	void ComputeMass(b2MassData* massData, float density) const override;
+	void ComputeMass(b2MassData* massData, fixed density) const override;
 
 	/// Position
 	b2Vec2 m_p;
@@ -59,7 +59,7 @@ public:
 inline b2CircleShape::b2CircleShape()
 {
 	m_type = e_circle;
-	m_radius = 0.0f;
+	m_radius = fixed_zero;
 	m_p.SetZero();
 }
 

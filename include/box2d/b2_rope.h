@@ -51,11 +51,11 @@ struct b2RopeTuning
 	{
 		stretchingModel = b2_pbdStretchingModel;
 		bendingModel = b2_pbdAngleBendingModel;
-		damping = 0.0f;
-		stretchStiffness = 1.0f;
-		bendStiffness = 0.5f;
-		bendHertz = 1.0f;
-		bendDamping = 0.0f;
+		damping = fixed_zero;
+		stretchStiffness = fixed_one;
+		bendStiffness = fixed_half;
+		bendHertz = fixed_one;
+		bendDamping = fixed_zero;
 		isometric = false;
 		fixedEffectiveMass = false;
 		warmStart = false;
@@ -63,13 +63,13 @@ struct b2RopeTuning
 
 	b2StretchingModel stretchingModel;
 	b2BendingModel bendingModel;
-	float damping;
-	float stretchStiffness;
-	float stretchHertz;
-	float stretchDamping;
-	float bendStiffness;
-	float bendHertz;
-	float bendDamping;
+	fixed damping;
+	fixed stretchStiffness;
+	fixed stretchHertz;
+	fixed stretchDamping;
+	fixed bendStiffness;
+	fixed bendHertz;
+	fixed bendDamping;
 	bool isometric;
 	bool fixedEffectiveMass;
 	bool warmStart;
@@ -90,7 +90,7 @@ struct b2RopeDef
 	b2Vec2 position;
 	b2Vec2* vertices;
 	int32 count;
-	float* masses;
+	fixed* masses;
 	b2Vec2 gravity;
 	b2RopeTuning tuning;
 };
@@ -109,7 +109,7 @@ public:
 	void SetTuning(const b2RopeTuning& tuning);
 
 	///
-	void Step(float timeStep, int32 iterations, const b2Vec2& position);
+	void Step(fixed timeStep, int32 iterations, const b2Vec2& position);
 
 	///
 	void Reset(const b2Vec2& position);
@@ -120,12 +120,12 @@ public:
 private:
 
 	void SolveStretch_PBD();
-	void SolveStretch_XPBD(float dt);
+	void SolveStretch_XPBD(fixed dt);
 	void SolveBend_PBD_Angle();
-	void SolveBend_XPBD_Angle(float dt);
+	void SolveBend_XPBD_Angle(fixed dt);
 	void SolveBend_PBD_Distance();
 	void SolveBend_PBD_Height();
-	void ApplyBendForces(float dt);
+	void ApplyBendForces(fixed dt);
 
 	b2Vec2 m_position;
 
@@ -141,7 +141,7 @@ private:
 	b2Vec2* m_p0s;
 	b2Vec2* m_vs;
 
-	float* m_invMasses;
+	fixed* m_invMasses;
 	b2Vec2 m_gravity;
 
 	b2RopeTuning m_tuning;

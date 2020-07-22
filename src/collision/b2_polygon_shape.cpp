@@ -33,31 +33,31 @@ b2Shape* b2PolygonShape::Clone(b2BlockAllocator* allocator) const
 	return clone;
 }
 
-void b2PolygonShape::SetAsBox(float hx, float hy)
+void b2PolygonShape::SetAsBox(fixed hx, fixed hy)
 {
 	m_count = 4;
 	m_vertices[0].Set(-hx, -hy);
 	m_vertices[1].Set( hx, -hy);
 	m_vertices[2].Set( hx,  hy);
 	m_vertices[3].Set(-hx,  hy);
-	m_normals[0].Set(0.0f, -1.0f);
-	m_normals[1].Set(1.0f, 0.0f);
-	m_normals[2].Set(0.0f, 1.0f);
-	m_normals[3].Set(-1.0f, 0.0f);
+	m_normals[0].Set(fixed_zero, -fixed_one);
+	m_normals[1].Set(fixed_one, fixed_zero);
+	m_normals[2].Set(fixed_zero, fixed_one);
+	m_normals[3].Set(-fixed_one, fixed_zero);
 	m_centroid.SetZero();
 }
 
-void b2PolygonShape::SetAsBox(float hx, float hy, const b2Vec2& center, float angle)
+void b2PolygonShape::SetAsBox(fixed hx, fixed hy, const b2Vec2& center, fixed angle)
 {
 	m_count = 4;
 	m_vertices[0].Set(-hx, -hy);
 	m_vertices[1].Set( hx, -hy);
 	m_vertices[2].Set( hx,  hy);
 	m_vertices[3].Set(-hx,  hy);
-	m_normals[0].Set(0.0f, -1.0f);
-	m_normals[1].Set(1.0f, 0.0f);
-	m_normals[2].Set(0.0f, 1.0f);
-	m_normals[3].Set(-1.0f, 0.0f);
+	m_normals[0].Set(fixed_zero, -fixed_one);
+	m_normals[1].Set(fixed_one, fixed_zero);
+	m_normals[2].Set(fixed_zero, fixed_one);
+	m_normals[3].Set(-fixed_one, fixed_zero);
 	m_centroid = center;
 
 	b2Transform xf;
@@ -81,14 +81,14 @@ static b2Vec2 ComputeCentroid(const b2Vec2* vs, int32 count)
 {
 	b2Assert(count >= 3);
 
-	b2Vec2 c(0.0f, 0.0f);
-	float area = 0.0f;
+	b2Vec2 c; c.Set(fixed_zero, fixed_zero);
+	fixed area = fixed_zero;
 
 	// Get a reference point for forming triangles.
 	// Use the first vertex to reduce round-off errors.
 	b2Vec2 s = vs[0];
 
-	const float inv3 = 1.0f / 3.0f;
+	const fixed inv3 = fixed_third;
 
 	for (int32 i = 0; i < count; ++i)
 	{
@@ -100,9 +100,9 @@ static b2Vec2 ComputeCentroid(const b2Vec2* vs, int32 count)
 		b2Vec2 e1 = p2 - p1;
 		b2Vec2 e2 = p3 - p1;
 
-		float D = b2Cross(e1, e2);
+		fixed D = b2Cross(e1, e2);
 
-		float triangleArea = 0.5f * D;
+		fixed triangleArea = fixed_half * D;
 		area += triangleArea;
 
 		// Area weighted centroid
@@ -111,7 +111,7 @@ static b2Vec2 ComputeCentroid(const b2Vec2* vs, int32 count)
 
 	// Centroid
 	b2Assert(area > b2_epsilon);
-	c = (1.0f / area) * c + s;
+	c = (fixed_zero / area) * c + s;
 	return c;
 }
 
@@ -120,7 +120,7 @@ void b2PolygonShape::Set(const b2Vec2* vertices, int32 count)
 	b2Assert(3 <= count && count <= b2_maxPolygonVertices);
 	if (count < 3)
 	{
-		SetAsBox(1.0f, 1.0f);
+		SetAsBox(fixed_one, fixed_one);
 		return;
 	}
 	
@@ -136,7 +136,7 @@ void b2PolygonShape::Set(const b2Vec2* vertices, int32 count)
 		bool unique = true;
 		for (int32 j = 0; j < tempCount; ++j)
 		{
-			if (b2DistanceSquared(v, ps[j]) < ((0.5f * b2_linearSlop) * (0.5f * b2_linearSlop)))
+			if (b2DistanceSquared(v, ps[j]) < ((fixed_half * b2_linearSlop) * (fixed_half * b2_linearSlop)))
 			{
 				unique = false;
 				break;
@@ -154,7 +154,7 @@ void b2PolygonShape::Set(const b2Vec2* vertices, int32 count)
 	{
 		// Polygon is degenerate.
 		b2Assert(false);
-		SetAsBox(1.0f, 1.0f);
+		SetAsBox(fixed_one, fixed_one);
 		return;
 	}
 
@@ -163,10 +163,10 @@ void b2PolygonShape::Set(const b2Vec2* vertices, int32 count)
 
 	// Find the right most point on the hull
 	int32 i0 = 0;
-	float x0 = ps[0].x;
+	fixed x0 = ps[0].x;
 	for (int32 i = 1; i < n; ++i)
 	{
-		float x = ps[i].x;
+		fixed x = ps[i].x;
 		if (x > x0 || (x == x0 && ps[i].y < ps[i0].y))
 		{
 			i0 = i;
@@ -194,14 +194,14 @@ void b2PolygonShape::Set(const b2Vec2* vertices, int32 count)
 
 			b2Vec2 r = ps[ie] - ps[hull[m]];
 			b2Vec2 v = ps[j] - ps[hull[m]];
-			float c = b2Cross(r, v);
-			if (c < 0.0f)
+			fixed c = b2Cross(r, v);
+			if (c < fixed_zero)
 			{
 				ie = j;
 			}
 
 			// Collinearity check
-			if (c == 0.0f && v.LengthSquared() > r.LengthSquared())
+			if (c == fixed_zero && v.LengthSquared() > r.LengthSquared())
 			{
 				ie = j;
 			}
@@ -220,7 +220,7 @@ void b2PolygonShape::Set(const b2Vec2* vertices, int32 count)
 	{
 		// Polygon is degenerate.
 		b2Assert(false);
-		SetAsBox(1.0f, 1.0f);
+		SetAsBox(fixed_one, fixed_one);
 		return;
 	}
 
@@ -239,7 +239,7 @@ void b2PolygonShape::Set(const b2Vec2* vertices, int32 count)
 		int32 i2 = i + 1 < m ? i + 1 : 0;
 		b2Vec2 edge = m_vertices[i2] - m_vertices[i1];
 		b2Assert(edge.LengthSquared() > b2_epsilon * b2_epsilon);
-		m_normals[i] = b2Cross(edge, 1.0f);
+		m_normals[i] = b2Cross(edge, fixed_one);
 		m_normals[i].Normalize();
 	}
 
@@ -253,8 +253,8 @@ bool b2PolygonShape::TestPoint(const b2Transform& xf, const b2Vec2& p) const
 
 	for (int32 i = 0; i < m_count; ++i)
 	{
-		float dot = b2Dot(m_normals[i], pLocal - m_vertices[i]);
-		if (dot > 0.0f)
+		fixed dot = b2Dot(m_normals[i], pLocal - m_vertices[i]);
+		if (dot > fixed_zero)
 		{
 			return false;
 		}
@@ -273,7 +273,7 @@ bool b2PolygonShape::RayCast(b2RayCastOutput* output, const b2RayCastInput& inpu
 	b2Vec2 p2 = b2MulT(xf.q, input.p2 - xf.p);
 	b2Vec2 d = p2 - p1;
 
-	float lower = 0.0f, upper = input.maxFraction;
+	fixed lower = fixed_zero, upper = input.maxFraction;
 
 	int32 index = -1;
 
@@ -282,12 +282,12 @@ bool b2PolygonShape::RayCast(b2RayCastOutput* output, const b2RayCastInput& inpu
 		// p = p1 + a * d
 		// dot(normal, p - v) = 0
 		// dot(normal, p1 - v) + a * dot(normal, d) = 0
-		float numerator = b2Dot(m_normals[i], m_vertices[i] - p1);
-		float denominator = b2Dot(m_normals[i], d);
+		fixed numerator = b2Dot(m_normals[i], m_vertices[i] - p1);
+		fixed denominator = b2Dot(m_normals[i], d);
 
-		if (denominator == 0.0f)
+		if (denominator == fixed_zero)
 		{	
-			if (numerator < 0.0f)
+			if (numerator < fixed_zero)
 			{
 				return false;
 			}
@@ -298,14 +298,14 @@ bool b2PolygonShape::RayCast(b2RayCastOutput* output, const b2RayCastInput& inpu
 			// lower < numerator / denominator, where denominator < 0
 			// Since denominator < 0, we have to flip the inequality:
 			// lower < numerator / denominator <==> denominator * lower > numerator.
-			if (denominator < 0.0f && numerator < lower * denominator)
+			if (denominator < fixed_zero && numerator < lower * denominator)
 			{
 				// Increase lower.
 				// The segment enters this half-space.
 				lower = numerator / denominator;
 				index = i;
 			}
-			else if (denominator > 0.0f && numerator < upper * denominator)
+			else if (denominator > fixed_zero && numerator < upper * denominator)
 			{
 				// Decrease upper.
 				// The segment exits this half-space.
@@ -323,7 +323,7 @@ bool b2PolygonShape::RayCast(b2RayCastOutput* output, const b2RayCastInput& inpu
 		}
 	}
 
-	b2Assert(0.0f <= lower && lower <= input.maxFraction);
+	b2Assert(fixed_zero <= lower && lower <= input.maxFraction);
 
 	if (index >= 0)
 	{
@@ -354,7 +354,7 @@ void b2PolygonShape::ComputeAABB(b2AABB* aabb, const b2Transform& xf, int32 chil
 	aabb->upperBound = upper + r;
 }
 
-void b2PolygonShape::ComputeMass(b2MassData* massData, float density) const
+void b2PolygonShape::ComputeMass(b2MassData* massData, fixed density) const
 {
 	// Polygon mass, centroid, and inertia.
 	// Let rho be the polygon density in mass per unit area.
@@ -382,15 +382,15 @@ void b2PolygonShape::ComputeMass(b2MassData* massData, float density) const
 
 	b2Assert(m_count >= 3);
 
-	b2Vec2 center(0.0f, 0.0f);
-	float area = 0.0f;
-	float I = 0.0f;
+	b2Vec2 center(fixed_zero, fixed_zero);
+	fixed area = fixed_zero;
+	fixed I = fixed_zero;
 
 	// Get a reference point for forming triangles.
 	// Use the first vertex to reduce round-off errors.
 	b2Vec2 s = m_vertices[0];
 
-	const float k_inv3 = 1.0f / 3.0f;
+	const fixed k_inv3 = fixed_third;
 
 	for (int32 i = 0; i < m_count; ++i)
 	{
@@ -398,21 +398,21 @@ void b2PolygonShape::ComputeMass(b2MassData* massData, float density) const
 		b2Vec2 e1 = m_vertices[i] - s;
 		b2Vec2 e2 = i + 1 < m_count ? m_vertices[i+1] - s : m_vertices[0] - s;
 
-		float D = b2Cross(e1, e2);
+		fixed D = b2Cross(e1, e2);
 
-		float triangleArea = 0.5f * D;
+		fixed triangleArea = fixed_half * D;
 		area += triangleArea;
 
 		// Area weighted centroid
 		center += triangleArea * k_inv3 * (e1 + e2);
 
-		float ex1 = e1.x, ey1 = e1.y;
-		float ex2 = e2.x, ey2 = e2.y;
+		fixed ex1 = e1.x, ey1 = e1.y;
+		fixed ex2 = e2.x, ey2 = e2.y;
 
-		float intx2 = ex1*ex1 + ex2*ex1 + ex2*ex2;
-		float inty2 = ey1*ey1 + ey2*ey1 + ey2*ey2;
+		fixed intx2 = ex1*ex1 + ex2*ex1 + ex2*ex2;
+		fixed inty2 = ey1*ey1 + ey2*ey1 + ey2*ey2;
 
-		I += (0.25f * k_inv3 * D) * (intx2 + inty2);
+		I += (fixed_quarter * k_inv3 * D) * (intx2 + inty2);
 	}
 
 	// Total mass
@@ -420,7 +420,7 @@ void b2PolygonShape::ComputeMass(b2MassData* massData, float density) const
 
 	// Center of mass
 	b2Assert(area > b2_epsilon);
-	center *= 1.0f / area;
+	center *= fixed_one / area;
 	massData->center = center + s;
 
 	// Inertia tensor relative to the local origin (point s).
@@ -447,8 +447,8 @@ bool b2PolygonShape::Validate() const
 			}
 
 			b2Vec2 v = m_vertices[j] - p;
-			float c = b2Cross(e, v);
-			if (c < 0.0f)
+			fixed c = b2Cross(e, v);
+			if (c < fixed_zero)
 			{
 				return false;
 			}

@@ -68,8 +68,8 @@ public:
 /// match up one-to-one with the contact points in b2Manifold.
 struct b2ContactImpulse
 {
-	float normalImpulses[b2_maxManifoldPoints];
-	float tangentImpulses[b2_maxManifoldPoints];
+	fixed normalImpulses[b2_maxManifoldPoints];
+	fixed tangentImpulses[b2_maxManifoldPoints];
 	int32 count;
 };
 
@@ -142,7 +142,7 @@ public:
 	virtual ~b2RayCastCallback() {}
 
 	/// Called for each fixture found in the query. You control how the ray cast
-	/// proceeds by returning a float:
+	/// proceeds by returning a fixed:
 	/// return -1: ignore this fixture and continue
 	/// return 0: terminate the ray cast
 	/// return fraction: clip the ray to this point
@@ -153,8 +153,8 @@ public:
 	/// @param fraction the fraction along the ray at the point of intersection
 	/// @return -1 to filter, 0 to terminate, fraction to clip the ray for
 	/// closest hit, 1 to continue
-	virtual float ReportFixture(	b2Fixture* fixture, const b2Vec2& point,
-									const b2Vec2& normal, float fraction) = 0;
+	virtual fixed ReportFixture(	b2Fixture* fixture, const b2Vec2& point,
+									const b2Vec2& normal, fixed fraction) = 0;
 };
 
 #endif
