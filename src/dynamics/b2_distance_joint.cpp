@@ -56,8 +56,8 @@ b2DistanceJoint::b2DistanceJoint(const b2DistanceJointDef* def)
 	m_localAnchorA = def->localAnchorA;
 	m_localAnchorB = def->localAnchorB;
 	m_length = def->length;
-	m_frequencyHz = def->frequencyHz;
-	m_dampingRatio = def->dampingRatio;
+	m_stiffness = def->stiffness;
+ 	m_damping = def->damping;
 	m_impulse = fixed_zero;
 	m_gamma = fixed_zero;
 	m_bias = fixed_zero;
@@ -105,21 +105,12 @@ void b2DistanceJoint::InitVelocityConstraints(const b2SolverData& data)
 	fixed crBu = b2Cross(m_rB, m_u);
 	fixed invMass = m_invMassA + m_invIA * crAu * crAu + m_invMassB + m_invIB * crBu * crBu;
 
-	// Compute the effective mass matrix.
-	m_mass = invMass != fixed_zero ? fixed_one / invMass : fixed_zero;
-
-	if (m_frequencyHz > fixed_zero)
+	if (m_stiffness > fixed_zero)
 	{
 		fixed C = length - m_length;
-
-		// Frequency
-		fixed omega = b2_two_pi * m_frequencyHz;
-
-		// Damping coefficient
-		fixed d = fixed_two * m_mass * m_dampingRatio * omega;
-
-		// Spring stiffness
-		fixed k = m_mass * omega * omega;
+		
+		fixed d = m_damping;
+ 		fixed k = m_stiffness;
 
 		// magic formulas
 		fixed h = data.step.dt;
@@ -136,6 +127,7 @@ void b2DistanceJoint::InitVelocityConstraints(const b2SolverData& data)
 	{
 		m_gamma = fixed_zero;
 		m_bias = fixed_zero;
+		m_mass = invMass != fixed_zero ? fixed_one / invMass : fixed_zero;
 	}
 
 	if (data.step.warmStarting)
@@ -189,7 +181,7 @@ void b2DistanceJoint::SolveVelocityConstraints(const b2SolverData& data)
 
 bool b2DistanceJoint::SolvePositionConstraints(const b2SolverData& data)
 {
-	if (m_frequencyHz > fixed_zero)
+	if (m_stiffness > fixed_zero)
 	{
 		// There is no position correction for soft distance constraints.
 		return true;
@@ -257,10 +249,10 @@ void b2DistanceJoint::Dump()
 	b2Dump("  jd.bodyA = bodies[%d];\n", indexA);
 	b2Dump("  jd.bodyB = bodies[%d];\n", indexB);
 	b2Dump("  jd.collideConnected = bool(%d);\n", m_collideConnected);
-	b2Dump("  jd.localAnchorA.Set(%.15lef, %.15lef);\n", m_localAnchorA.x, m_localAnchorA.y);
-	b2Dump("  jd.localAnchorB.Set(%.15lef, %.15lef);\n", m_localAnchorB.x, m_localAnchorB.y);
-	b2Dump("  jd.length = %.15lef;\n", m_length);
-	b2Dump("  jd.frequencyHz = %.15lef;\n", m_frequencyHz);
-	b2Dump("  jd.dampingRatio = %.15lef;\n", m_dampingRatio);
+	b2Dump("  jd.localAnchorA.Set(%.9g, %.9g);\n", m_localAnchorA.x, m_localAnchorA.y);
+ 	b2Dump("  jd.localAnchorB.Set(%.9g, %.9g);\n", m_localAnchorB.x, m_localAnchorB.y);
+ 	b2Dump("  jd.length = %.9g;\n", m_length);
+ 	b2Dump("  jd.stiffness = %.9g;\n", m_stiffness);
+ 	b2Dump("  jd.damping = %.9g;\n", m_damping);
 	b2Dump("  joints[%d] = m_world->CreateJoint(&jd);\n", m_index);
 }

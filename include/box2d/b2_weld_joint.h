@@ -36,12 +36,14 @@ struct b2WeldJointDef : public b2JointDef
 		localAnchorA.Set(fixed_zero, fixed_zero);
 		localAnchorB.Set(fixed_zero, fixed_zero);
 		referenceAngle = fixed_zero;
-		frequencyHz = fixed_zero;
-		dampingRatio = fixed_zero;
+		stiffness = fixed_zero;
+ 		damping = fixed_zero;
 	}
 
-	/// Initialize the bodies, anchors, and reference angle using a world
-	/// anchor point.
+	/// Initialize the bodies, anchors, reference angle, stiffness, and damping.
+ 	/// @param bodyA the first body connected by this joint
+ 	/// @param bodyB the second body connected by this joint
+ 	/// @param anchor the point of connection in world coordinates
 	void Initialize(b2Body* bodyA, b2Body* bodyB, const b2Vec2& anchor);
 
 	/// The local anchor point relative to bodyA's origin.
@@ -53,12 +55,12 @@ struct b2WeldJointDef : public b2JointDef
 	/// The bodyB angle minus bodyA angle in the reference state (radians).
 	fixed referenceAngle;
 	
-	/// The mass-spring-damper frequency in Hertz. Rotation only.
-	/// Disable softness with a value of 0.
-	fixed frequencyHz;
+	/// The rotational stiffness in N*m
+ 	/// Disable softness with a value of 0
+ 	fixed stiffness;
 
-	/// The damping ratio. 0 = no damping, 1 = critical damping.
-	fixed dampingRatio;
+	/// The rotational damping in N*m*s
+ 	fixed damping;
 };
 
 /// A weld joint essentially glues two bodies together. A weld joint may
@@ -81,13 +83,13 @@ public:
 	/// Get the reference angle.
 	fixed GetReferenceAngle() const { return m_referenceAngle; }
 
-	/// Set/get frequency in Hz.
-	void SetFrequency(fixed hz) { m_frequencyHz = hz; }
-	fixed GetFrequency() const { return m_frequencyHz; }
+	/// Set/get stiffness in N*m
+ 	void SetStiffness(fixed hz) { m_stiffness = hz; }
+ 	fixed GetFrequency() const { return m_stiffness; }
 
-	/// Set/get damping ratio.
-	void SetDampingRatio(fixed ratio) { m_dampingRatio = ratio; }
-	fixed GetDampingRatio() const { return m_dampingRatio; }
+	/// Set/get damping in N*m*s
+ 	void SetDamping(fixed damping) { m_damping = damping; }
+ 	fixed GetDamping() const { return m_damping; }
 
 	/// Dump to b2Log
 	void Dump() override;
@@ -102,8 +104,8 @@ protected:
 	void SolveVelocityConstraints(const b2SolverData& data) override;
 	bool SolvePositionConstraints(const b2SolverData& data) override;
 
-	fixed m_frequencyHz;
-	fixed m_dampingRatio;
+	fixed m_stiffness;
+ 	fixed m_damping;
 	fixed m_bias;
 
 	// Solver shared

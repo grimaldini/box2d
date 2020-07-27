@@ -53,8 +53,8 @@ b2WeldJoint::b2WeldJoint(const b2WeldJointDef* def)
 	m_localAnchorA = def->localAnchorA;
 	m_localAnchorB = def->localAnchorB;
 	m_referenceAngle = def->referenceAngle;
-	m_frequencyHz = def->frequencyHz;
-	m_dampingRatio = def->dampingRatio;
+	m_stiffness = def->stiffness;
+ 	m_damping = def->damping;
 
 	m_impulse.SetZero();
 }
@@ -106,23 +106,19 @@ void b2WeldJoint::InitVelocityConstraints(const b2SolverData& data)
 	K.ey.z = K.ez.y;
 	K.ez.z = iA + iB;
 
-	if (m_frequencyHz > fixed_zero)
+	if (m_stiffness > fixed_zero)
 	{
 		K.GetInverse22(&m_mass);
 
 		fixed invM = iA + iB;
-		fixed m = invM > fixed_zero ? fixed_one / invM : fixed_zero;
 
 		fixed C = aB - aA - m_referenceAngle;
 
-		// Frequency
-		fixed omega = b2_two_pi * m_frequencyHz;
-
 		// Damping coefficient
-		fixed d = fixed_two * m * m_dampingRatio * omega;
+		fixed d = m_damping;
 
 		// Spring stiffness
-		fixed k = m * omega * omega;
+		fixed k = m_stiffness;
 
 		// magic formulas
 		fixed h = data.step.dt;
@@ -180,7 +176,7 @@ void b2WeldJoint::SolveVelocityConstraints(const b2SolverData& data)
 	fixed mA = m_invMassA, mB = m_invMassB;
 	fixed iA = m_invIA, iB = m_invIB;
 
-	if (m_frequencyHz > fixed_zero)
+	if (m_stiffness > fixed_zero)
 	{
 		fixed Cdot2 = wB - wA;
 
@@ -256,7 +252,7 @@ bool b2WeldJoint::SolvePositionConstraints(const b2SolverData& data)
 	K.ey.z = K.ez.y;
 	K.ez.z = iA + iB;
 
-	if (m_frequencyHz > fixed_zero)
+	if (m_stiffness > fixed_zero)
 	{
 		b2Vec2 C1 =  cB + rB - cA - rA;
 
@@ -339,10 +335,10 @@ void b2WeldJoint::Dump()
 	b2Dump("  jd.bodyA = bodies[%d];\n", indexA);
 	b2Dump("  jd.bodyB = bodies[%d];\n", indexB);
 	b2Dump("  jd.collideConnected = bool(%d);\n", m_collideConnected);
-	b2Dump("  jd.localAnchorA.Set(%.15lef, %.15lef);\n", m_localAnchorA.x, m_localAnchorA.y);
-	b2Dump("  jd.localAnchorB.Set(%.15lef, %.15lef);\n", m_localAnchorB.x, m_localAnchorB.y);
-	b2Dump("  jd.referenceAngle = %.15lef;\n", m_referenceAngle);
-	b2Dump("  jd.frequencyHz = %.15lef;\n", m_frequencyHz);
-	b2Dump("  jd.dampingRatio = %.15lef;\n", m_dampingRatio);
+	b2Dump("  jd.localAnchorA.Set(%.9g, %.9g);\n", m_localAnchorA.x, m_localAnchorA.y);
+ 	b2Dump("  jd.localAnchorB.Set(%.9g, %.9g);\n", m_localAnchorB.x, m_localAnchorB.y);
+ 	b2Dump("  jd.referenceAngle = %.9g;\n", m_referenceAngle);
+ 	b2Dump("  jd.stiffness = %.9g;\n", m_stiffness);
+ 	b2Dump("  jd.damping = %.9g;\n", m_damping);
 	b2Dump("  joints[%d] = m_world->CreateJoint(&jd);\n", m_index);
 }

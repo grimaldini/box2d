@@ -38,6 +38,56 @@
 
 #include <new>
 
+void b2LinearStiffness(fixed& stiffness, fixed& damping,
+					   fixed frequencyHertz, fixed dampingRatio,
+					   const b2Body* bodyA, const b2Body* bodyB)
+{
+	fixed massA = bodyA->GetMass();
+	fixed massB = bodyB->GetMass();
+	fixed mass;
+	if (massA > fixed_zero && massB > fixed_zero)
+	{
+		mass = massA * massB / (massA + massB);
+	}
+	else if (massA > fixed_zero)
+	{
+		mass = massA;
+	}
+	else
+	{
+		mass = massB;
+	}
+	
+	fixed omega = b2_two_pi * frequencyHertz;
+	stiffness = mass * omega * omega;
+	damping = fixed_two * mass * dampingRatio * omega;
+}
+
+void b2AngularStiffness(fixed& stiffness, fixed& damping,
+						fixed frequencyHertz, fixed dampingRatio,
+						const b2Body* bodyA, const b2Body* bodyB)
+{
+	fixed IA = bodyA->GetInertia();
+	fixed IB = bodyB->GetInertia();
+	fixed I;
+	if (IA > fixed_zero && IB > fixed_zero)
+	{
+		I = IA * IB / (IA + IB);
+	}
+	else if (IA > fixed_zero)
+	{
+		I = IA;
+	}
+	else
+	{
+		I = IB;
+	}
+	
+	fixed omega = b2_two_pi * frequencyHertz;
+	stiffness = I * omega * omega;
+	damping = fixed_two * I * dampingRatio * omega;
+}
+
 b2Joint* b2Joint::Create(const b2JointDef* def, b2BlockAllocator* allocator)
 {
 	b2Joint* joint = nullptr;

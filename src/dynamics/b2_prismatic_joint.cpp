@@ -105,7 +105,8 @@ b2PrismaticJoint::b2PrismaticJoint(const b2PrismaticJointDef* def)
 	m_motorSpeed = def->motorSpeed;
 	m_enableLimit = def->enableLimit;
 	m_enableMotor = def->enableMotor;
-
+	
+ 	m_translation = fixed_zero;
 	m_axis.SetZero();
 	m_perp.SetZero();
 }

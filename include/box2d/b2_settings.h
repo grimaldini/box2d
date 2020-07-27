@@ -39,7 +39,7 @@ typedef signed int int32;
 typedef unsigned char uint8;
 typedef unsigned short uint16;
 typedef unsigned int uint32;
-typedef fpm::fixed_16_16 fixed;
+typedef fpm::fixed<__int64_t, __int128_t, 32u> fixed;
 
 #define fixed_zero				fixed(0)
 #define fixed_one				fixed(1)
@@ -47,7 +47,13 @@ typedef fpm::fixed_16_16 fixed;
 #define fixed_three				fixed(3)
 #define fixed_four				fixed(4)
 #define fixed_five				fixed(5)
+#define fixed_six				fixed(6)
+#define fixed_seven				fixed(7)
+#define fixed_eight				fixed(8)
+#define fixed_nine				fixed(9)
 #define fixed_ten				fixed(10)
+#define fixed_twelve			fixed(12)
+#define fixed_fifty				fixed(50)
 #define fixed_hundred			fixed(100)
 #define fixed_thousand			fixed(1000)
 #define fixed_half				fixed(1, 2)
@@ -58,6 +64,9 @@ typedef fpm::fixed_16_16 fixed;
 #define fixed_tenth				fixed(1, 10)
 #define fixed_hundredth			fixed(1, 100)
 #define fixed_thousandth		fixed(1, 1000)
+#define fixed_tenthousandth		fixed(1, 10000)
+#define fixed_hundredthousandth	fixed(1, 100000)
+#define fixed_millionth			fixed(1, 1000000)
 
 #define b2_max					std::numeric_limits<fixed>::max()
 #define b2_epsilon				std::numeric_limits<fixed>::epsilon()
