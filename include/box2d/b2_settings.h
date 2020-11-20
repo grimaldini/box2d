@@ -39,39 +39,39 @@ typedef signed int int32;
 typedef unsigned char uint8;
 typedef unsigned short uint16;
 typedef unsigned int uint32;
-typedef fpm::fixed<__int64_t, __int128_t, 32u> fixed;
 
-#define fixed_zero				fixed(0)
-#define fixed_one				fixed(1)
-#define fixed_two				fixed(2)
-#define fixed_three				fixed(3)
-#define fixed_four				fixed(4)
-#define fixed_five				fixed(5)
-#define fixed_six				fixed(6)
-#define fixed_seven				fixed(7)
-#define fixed_eight				fixed(8)
-#define fixed_nine				fixed(9)
-#define fixed_ten				fixed(10)
-#define fixed_twelve			fixed(12)
-#define fixed_fifty				fixed(50)
-#define fixed_hundred			fixed(100)
-#define fixed_thousand			fixed(1000)
-#define fixed_half				fixed(1, 2)
-#define fixed_third				fixed(1, 3)
-#define fixed_quarter			fixed(1, 4)
-#define fixed_fifth				fixed(1, 5)
-#define fixed_three_quarters	fixed(3, 4)
-#define fixed_tenth				fixed(1, 10)
-#define fixed_hundredth			fixed(1, 100)
-#define fixed_thousandth		fixed(1, 1000)
-#define fixed_tenthousandth		fixed(1, 10000)
-#define fixed_hundredthousandth	fixed(1, 100000)
-#define fixed_millionth			fixed(1, 1000000)
+using fixed =									fpm::fixed<__int64_t, __int128_t, 32u>;
+static const fixed fixed_zero =					fixed(0);
+static const fixed fixed_one =					fixed(1);
+static const fixed fixed_two =					fixed(2);
+static const fixed fixed_three =				fixed(3);
+static const fixed fixed_four =					fixed(4);
+static const fixed fixed_five =					fixed(5);
+static const fixed fixed_six =					fixed(6);
+static const fixed fixed_seven =				fixed(7);
+static const fixed fixed_eight =				fixed(8);
+static const fixed fixed_nine =					fixed(9);
+static const fixed fixed_ten =					fixed(10);
+static const fixed fixed_twelve =				fixed(12);
+static const fixed fixed_fifty =				fixed(50);
+static const fixed fixed_hundred =				fixed(100);
+static const fixed fixed_thousand =				fixed(1000);
+static const fixed fixed_half =					fixed(1, 2);
+static const fixed fixed_third =				fixed(1, 3);
+static const fixed fixed_quarter =				fixed(1, 4);
+static const fixed fixed_fifth =				fixed(1, 5);
+static const fixed fixed_three_quarters =		fixed(3, 4);
+static const fixed fixed_tenth =				fixed(1, 10);
+static const fixed fixed_hundredth =			fixed(1, 100);
+static const fixed fixed_thousandth =			fixed(1, 1000);
+static const fixed fixed_tenthousandth =		fixed(1, 10000);
+static const fixed fixed_hundredthousandth =	fixed(1, 100000);
+static const fixed fixed_millionth =			fixed(1, 1000000);
 
-#define b2_max					std::numeric_limits<fixed>::max()
-#define b2_epsilon				std::numeric_limits<fixed>::epsilon()
-#define b2_two_pi				fixed::two_pi()
-#define b2_pi					fixed::pi()
+static const fixed b2_max =						std::numeric_limits<fixed>::max();
+static const fixed b2_epsilon =					std::numeric_limits<fixed>::epsilon();
+static const fixed b2_two_pi =					fixed::two_pi();
+static const fixed b2_pi =						fixed::pi();
 
 /// @file
 /// Global tuning constants based on meters-kilograms-seconds (MKS) units.
@@ -81,83 +81,83 @@ typedef fpm::fixed<__int64_t, __int128_t, 32u> fixed;
 
 /// The maximum number of contact points between two convex shapes. Do
 /// not change this value.
-#define b2_maxManifoldPoints	2
+static const int b2_maxManifoldPoints = 2;
 
 /// The maximum number of vertices on a convex polygon. You cannot increase
 /// this too much because b2BlockAllocator has a maximum object size.
-#define b2_maxPolygonVertices	8
+static const int b2_maxPolygonVertices = 8;
 
 /// This is used to fatten AABBs in the dynamic tree. This allows proxies
 /// to move by a small amount without triggering a tree adjustment.
 /// This is in meters.
-#define b2_aabbExtension		fixed_tenth
+static const fixed b2_aabbExtension = fixed_tenth;
 
 /// This is used to fatten AABBs in the dynamic tree. This is used to predict
 /// the future position based on the current displacement.
 /// This is a dimensionless multiplier.
-#define b2_aabbMultiplier		fixed_four
+static const fixed b2_aabbMultiplier = fixed_four;
 
 /// A small length used as a collision and constraint tolerance. Usually it is
 /// chosen to be numerically significant, but visually insignificant.
-#define b2_linearSlop			fixed(5, 1000)
+static const fixed b2_linearSlop = fixed(5, 1000);
 
 /// A small angle used as a collision and constraint tolerance. Usually it is
 /// chosen to be numerically significant, but visually insignificant.
-#define b2_angularSlop			(fixed(2, 180) * b2_pi)
+static const fixed b2_angularSlop = b2_two_pi / fixed(180);
 
 /// The radius of the polygon/edge shape skin. This should not be modified. Making
 /// this smaller means polygons will have an insufficient buffer for continuous collision.
 /// Making it larger may create artifacts for vertex collision.
-#define b2_polygonRadius		(fixed_two * b2_linearSlop)
+static const fixed b2_polygonRadius = fixed_two * b2_linearSlop;
 
 /// Maximum number of sub-steps per contact in continuous physics simulation.
-#define b2_maxSubSteps			8
+static const int b2_maxSubSteps = 8;
 
 
 // Dynamics
 
 /// Maximum number of contacts to be handled to solve a TOI impact.
-#define b2_maxTOIContacts			32
+static const int b2_maxTOIContacts = 32;
 
 /// A velocity threshold for elastic collisions. Any collision with a relative linear
 /// velocity below this threshold will be treated as inelastic.
-#define b2_velocityThreshold		fixed_one
+static const fixed b2_velocityThreshold = fixed_one;
 
 /// The maximum linear position correction used when solving constraints. This helps to
 /// prevent overshoot.
-#define b2_maxLinearCorrection		fixed(2, 10)
+static const fixed b2_maxLinearCorrection = fixed(2, 10);
 
 /// The maximum angular position correction used when solving constraints. This helps to
 /// prevent overshoot.
-#define b2_maxAngularCorrection		(fixed(8, 180) * b2_pi)
+static const fixed b2_maxAngularCorrection = b2_pi * fixed(8, 180);
 
 /// The maximum linear velocity of a body. This limit is very large and is used
 /// to prevent numerical problems. You shouldn't need to adjust this.
-#define b2_maxTranslation			fixed_two
-#define b2_maxTranslationSquared	(b2_maxTranslation * b2_maxTranslation)
+static const fixed b2_maxTranslation = fixed_two;
+static const fixed b2_maxTranslationSquared = b2_maxTranslation * b2_maxTranslation;
 
 /// The maximum angular velocity of a body. This limit is very large and is used
 /// to prevent numerical problems. You shouldn't need to adjust this.
-#define b2_maxRotation				(fixed_half * b2_pi)
-#define b2_maxRotationSquared		(b2_maxRotation * b2_maxRotation)
+static const fixed b2_maxRotation = fixed_half * b2_pi;
+static const fixed b2_maxRotationSquared = b2_maxRotation * b2_maxRotation;
 
 /// This scale factor controls how fast overlap is resolved. Ideally this would be 1 so
 /// that overlap is removed in one time step. However using values close to 1 often lead
 /// to overshoot.
-#define b2_baumgarte				fixed(2, 10)
-#define b2_toiBaumgarte				fixed_three_quarters
+static const fixed b2_baumgarte = fixed(2, 10);
+static const fixed b2_toiBaumgarte = fixed_three_quarters;
 
 
 // Sleep
 
 /// The time that a body must be still before it will go to sleep.
-#define b2_timeToSleep				fixed_half
+static const fixed b2_timeToSleep = fixed_half;
 
 /// A body cannot sleep if its linear velocity is above this tolerance.
-#define b2_linearSleepTolerance		fixed_hundredth
+static const fixed b2_linearSleepTolerance = fixed_hundredth;
 
 /// A body cannot sleep if its angular velocity is above this tolerance.
-#define b2_angularSleepTolerance	(fixed(2, 180) * b2_pi)
+static const fixed b2_angularSleepTolerance = b2_two_pi * fixed(1, 180);
 
 // Memory Allocation
 
